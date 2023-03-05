@@ -1,0 +1,426 @@
+﻿///<copyright file = "ScopedView.js" comapny="Microsoft">
+//      Copyright (c) Microsoft Corporation.  All rights reserved.
+///</copyright>
+///<summary>
+///     Contains the script for search page. Always include this after the basket Component.
+///</summary>
+///<history>
+///     2006-11-16 liviuo created
+///     2007-04-24 karunak binary language selection
+///     2007-05-22 karunak binary language size calculation
+///</history>
+
+// Register a namespace for the Catalog-specific UI components
+Type.registerNamespace("Microsoft.UpdateServices.Catalog.UI");
+
+/// <summary>
+///    Contains the script required for the search page
+/// </summary>
+Microsoft.UpdateServices.Catalog.UI.ScopedView = function(parentElement, uId, addToBasketLabel, removeFromBasketLabel, overView, overviewBox, packageDetails, packageBox, installDetails, installBox, languageSelection, languageBox,languageCheckboxes,currentLanguage,sizeContainer,updateBasketLabel, allLang, downloadButton, binarySize)
+{
+    Microsoft.UpdateServices.Catalog.UI.ScopedView.initializeBase(this, [parentElement]);
+    this._basket;
+    this._addToBasketLabel = addToBasketLabel, 
+    this._removeFromBasketLabel = removeFromBasketLabel;
+    this._uId = uId;       
+    this._overView = overView;
+    this._overviewBox = overviewBox;
+    this._packageDetails = packageDetails;
+    this._packageBox = packageBox;
+    this._installDetails = installDetails;
+    this._installBox = installBox;
+    this._states = new Array();
+    this._languageSelection = languageSelection;
+    this._languageBox = languageBox;
+    this._languageCheckboxes = languageCheckboxes;
+    this._currentLanguage = currentLanguage;
+    this._sizeContainer = sizeContainer;
+    this._updateBasketLabel =updateBasketLabel;
+    this._totalLanguages = 0;
+    this._totalLanguagesSelected = 0;
+    this._allLang = allLang;
+    this._downloadButton = downloadButton;
+    this._binarySize = binarySize; //array of binary size info per locale
+    this._neutralSize = 0;
+   
+    ///<summary>
+    ///     Update the labels on the add/remove button
+    ///</summary>
+    this.updateLabels = function (reloadBasket) {
+        if (typeof (this._basket._storageElement) === "undefined") {
+            return;
+        }
+
+        if (reloadBasket == "true") {
+            this._basket.syncCache();
+        }
+        if (this._basket.containsUpdate(this._uId)) {
+            this.manageBasketButton();
+        }
+    }
+    
+    ///<summary>
+    ///     Initialize the ScopedView search
+    ///</summary>
+    this._initialize = function()
+    {
+        this._basket = Microsoft.UpdateServices.Catalog.DownloadBasket.get_instance();
+        var languages = Microsoft.UpdateServices.Catalog.Constants.EmptyString;
+        var updateInfo;
+        var languagesList;
+        var size;
+        this._totalLanguages = this._languageCheckboxes.length;
+        
+        //get the neutral binaries size
+        this._neutralSize = this.getNeutralSize();
+        
+        //if basket contains the updte then set the size and languages from basket
+        if(this._basket.containsUpdate(this._uId))
+        {
+            updateInfo = this._basket.getUpdates([this._uId]);
+            languages = updateInfo[0].get_languages();
+            size = updateInfo[0].get_size();
+            if(languages != Microsoft.UpdateServices.Catalog.Constants.EmptyString)
+            {
+                languagesList = languages.split(Microsoft.UpdateServices.Catalog.Constants.UpdateInfoSeparator);
+            }
+            if(size != 0)
+            {
+                this._sizeContainer.innerHTML = Microsoft.UpdateServices.Catalog.UI.Utility.formatSize(size);
+            }
+        }
+        for(i=0; i<this._languageCheckboxes.length; i++ )
+        {            
+            //once the basket has the languages in it then look in it first and if not then select the default language
+            if(languages != Microsoft.UpdateServices.Catalog.Constants.EmptyString)
+            {
+                for(j=0; j<languagesList.length; j++)
+                {
+                    if(this._languageCheckboxes[i].id == languagesList[j])
+                    {
+                         this._languageCheckboxes[i].checked = "true";
+                         this._totalLanguagesSelected++;
+                    }
+                }
+            } 
+            else if(this._languageCheckboxes[i].id == this._currentLanguage)
+            {
+                this._languageCheckboxes[i].checked = "true";
+                this._totalLanguagesSelected++;
+            }
+            
+        }
+        //if there are no languages selected then select all the languages if there are languages present
+        if(this._totalLanguagesSelected == 0 && this._allLang != null)
+        {
+            this._allLang.checked = true;
+            this.allLanguageSelected();
+        }
+        
+    }
+    
+    ///<summary>
+    ///     This function removes/adds the update to/from basket depending of the update state and sets the add button text
+    ///</summary>
+    this.processBasket = function()
+    {        
+        this._basket.syncCache();
+        var updateInfo = uId;
+        
+        //if there is all languages check box then only get the total size
+        if(this._allLang != null)
+        {
+            var size = new Number(this.getTotalSize());   
+                            
+            this._sizeContainer.innerHTML = Microsoft.UpdateServices.Catalog.UI.Utility.formatSize(size);
+        }
+        
+        //if the update is already present then remove the update and if the click is to update then re-add
+        if(this._basket.containsUpdate(uId))
+        {     
+            this._basket.removeUpdates([uId]);
+        }
+        //if the update is not present in the basket then add it to basket
+        else
+        {
+            updateInfo += Microsoft.UpdateServices.Catalog.Constants.UpdateInfoSeparator + size + this.getLangSelected();
+            this._basket.addUpdates([new Microsoft.UpdateServices.Catalog.Update(updateInfo)]); 
+        } 
+        this.manageBasketButton();
+    }
+    
+    ///<summary>
+    ///     Returns the language part of the update info
+    ///</summary>
+    this.getLangSelected = function()
+    {
+       var languageSelected = Microsoft.UpdateServices.Catalog.Constants.EmptyString;
+       //go through the languages selected 
+        for(i=0; i<this._languageCheckboxes.length; i++ )
+        {
+            if(this._languageCheckboxes[i].checked )
+            {
+                languageSelected += Microsoft.UpdateServices.Catalog.Constants.UpdateInfoSeparator + this._languageCheckboxes[i].id;
+            }
+            
+        }       
+        return languageSelected;
+    }
+    
+        
+    ///<summary>
+    ///     Returns the total Size of the Binaries for the selected Locales
+    ///</summary>
+    this.getTotalSize = function()
+    {
+        var languagesSelected = this.getLangSelected();
+        var languagesList = languagesSelected.split(Microsoft.UpdateServices.Catalog.Constants.UpdateInfoSeparator);
+        var updateIDs = new Array();
+        var size = 0;
+        for(j=1;j<languagesList.length;j++)
+        {
+            for(i=0; i<this._binarySize.length;i++)
+            {
+                if(this._binarySize[i].shortLanguage == languagesList[j])
+                {
+                    for(k=0;k<this._binarySize[i].binaries.length; k++)
+                    {
+                        if(typeof(updateIDs[this._binarySize[i].binaries[k].updateID]) == typeof(Microsoft.UpdateServices.Catalog.Constants.UndefinedValue))
+                        {
+                            updateIDs[this._binarySize[i].binaries[k].updateID] = "";
+                            size += this._binarySize[i].binaries[k].size;
+                        }
+                    }
+                }
+            }
+        }
+        
+        //Add the neutral size, if the size is not zero
+        if(size != 0)
+        {
+            size +=  this._neutralSize;
+        }
+        return size;
+    }
+    
+    ///<summary>
+    ///     Returns total neutral binaries size
+    ///</summary>
+    this.getNeutralSize = function()
+    {
+        var size = 0;
+        var updateIDs = new Array();
+        for(i=0; i<this._binarySize.length;i++)
+        {
+            if(this._binarySize[i].shortLanguage == "all")
+            {
+                for(k=0;k<this._binarySize[i].binaries.length; k++)
+                {
+                    if(typeof(updateIDs[this._binarySize[i].binaries[k].updateID]) == typeof(Microsoft.UpdateServices.Catalog.Constants.UndefinedValue))
+                    {
+                        updateIDs[this._binarySize[i].binaries[k].updateID] = "";
+                        size +=  this._binarySize[i].binaries[k].size;
+                    }
+                }
+            }
+        }
+        return size;
+    }
+    
+    ///<summary>
+    ///    Event handler for swithing the tabs
+    ///</summary>
+    this.switchTab = function(tabNumber)
+    {        
+        this._overView.className =  "tab tabInactive";
+        this._packageDetails.className = "tab tabInactive";
+        this._installDetails.className = "tab tabInactive";
+        this._languageSelection.className = "tab tabInactive";
+
+        this._overviewBox.style.display  = "none";
+        this._packageBox.style.display  = "none";
+        this._installBox.style.display  = "none";
+        this._languageBox.style.display = "none";
+        $get('overView').setAttribute("aria-selected", "false");
+        $get('packageDetails').setAttribute("aria-selected", "false");
+        $get('installDetails').setAttribute("aria-selected", "false");
+        $get('languageSelection').setAttribute("aria-selected", "false");
+        switch (tabNumber)
+        {
+            case 1:
+                this._overView.className = "tab tabActive";
+                this._overviewBox.style.display = "block";
+                $get('overView').setAttribute("aria-selected", "true");
+                break;
+            case 2:
+                this._packageDetails.className = "tab tabActive";
+                this._packageBox.style.display = "block";
+                $get('packageDetails').setAttribute("aria-selected", "true");
+                break;
+            case 3:
+                this._installDetails.className = "tab tabActive";
+                this._installBox.style.display = "block";
+                $get('installDetails').setAttribute("aria-selected", "true");
+                break;
+            case 4:
+                this._languageSelection.className = "tab tabActive";
+                this._languageBox.style.display = "block";
+                $get('languageSelection').setAttribute("aria-selected", "true");
+                break;
+        }
+    }
+    
+    ///<summary>
+    ///     Removes the update from basket
+    ///</summary>
+    this.removeUpdate = function()
+    {
+        this._basket.removeUpdates([this._uId]);
+    }
+    
+    
+    ///<summary>
+    ///     Manages the text of the add/remove button when the language check boxes are clicked. 
+    ///     Handles the language checbox click event
+    ///</summary>
+    this.manageBasketButton = function()
+    {
+        var changed = false;
+        var noneChecked = true;
+        var languages = Microsoft.UpdateServices.Catalog.Constants.EmptyString;
+        var languageINBasket;
+        var size = 0;
+        
+        //if the update is in basket then get the languages that are already added
+        if(this._basket.containsUpdate(uId))
+        {
+            var updateInfo = this._basket.getUpdates([this._uId]);
+            languages = updateInfo[0].get_languages();
+        }
+        
+        this._totalLanguagesSelected = 0;
+        for(i=0; i<this._languageCheckboxes.length; i++ )
+        {   
+            languageINBasket = false;
+            //get the total languages in basket to set the select all check box
+            if(this._languageCheckboxes[i].checked)
+            {
+                this._totalLanguagesSelected++;
+            }            
+            
+            //see if any of the languages are cheked or the languages checked changes from that of the basket or default culture if languages are not inbasket
+            if(languages != Microsoft.UpdateServices.Catalog.Constants.EmptyString)
+            {
+                var languagesList = languages.split(Microsoft.UpdateServices.Catalog.Constants.UpdateInfoSeparator);
+                for(j=0;j<languagesList.length;j++)
+                {
+                    if(this._languageCheckboxes[i].id == languagesList[j])
+                    {
+                        languageINBasket = true;
+                    }    
+                }
+            }
+            else
+            {
+                if(this._languageCheckboxes[i].id == this._currentLanguage)
+                {
+                    languageINBasket = true;
+                }
+            }
+            if(languageINBasket)
+            {
+                if(!this._languageCheckboxes[i].checked) 
+                {
+                    changed = true;
+                }
+                else
+                {
+                    noneChecked = false;
+                }
+            }
+            else
+            {
+                if(this._languageCheckboxes[i].checked) 
+                {
+                    changed = true;
+                    noneChecked = false;
+                }
+            }
+        }
+       
+        
+        //if the all language checkbox is present and if all the languages are in basket then check the all language check box
+        if(this._allLang != null)
+        {
+            if(this._totalLanguagesSelected == this._totalLanguages)
+            {
+                this._allLang.checked = true;
+            }
+            else
+            {
+                this._allLang.checked = false;
+            }
+            
+            size = new Number(this.getTotalSize());           
+            this._sizeContainer.innerHTML = Microsoft.UpdateServices.Catalog.UI.Utility.formatSize(size);
+        }
+        //if there are no languages then none checked is false
+        else
+        {
+            noneChecked = false;
+        }
+        
+        //if the basket contains the update and something is changed and atleast one of the language is checked 
+        //then change the label to update if not to remove
+        if(this._basket.containsUpdate(uId))
+        {               
+           
+            if(noneChecked)
+            {
+                this._downloadButton.disabled = true;
+                this._downloadButton.style.cursor = "auto";
+            }
+            else
+            {                     
+                this._downloadButton.disabled = false;
+                this._downloadButton.style.cursor = "hand";
+            }
+        }
+        //If the update is not in basket and none of the languages are checked then disable the add button
+        else
+        {
+            if(noneChecked)
+            {
+                this._downloadButton.disabled = true;
+                this._downloadButton.style.cursor = "auto";
+            }
+            else
+            {
+                this._downloadButton.disabled = false;
+                this._downloadButton.style.cursor = "hand";
+                
+            }
+            
+        }
+    }
+    
+    ///<summary>
+    ///    Handles the all language check box click 
+    ///</summary>
+    this.allLanguageSelected = function()
+    {
+         var checked =  this._allLang.checked;
+         
+         //go through all the check boxes and set the checked state
+         for(i=0; i<this._languageCheckboxes.length; i++ )
+         {
+            this._languageCheckboxes[i].checked = checked;
+         }
+         this.manageBasketButton();
+    }
+     
+    this._initialize();
+}
+
+Microsoft.UpdateServices.Catalog.UI.ScopedView.registerClass("Microsoft.UpdateServices.Catalog.UI.ScopedView", Sys.UI.Control);
+

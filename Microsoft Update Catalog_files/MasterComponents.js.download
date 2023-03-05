@@ -1,0 +1,329 @@
+﻿//*********************************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+//
+// File Name   : MasterComponents.js
+// Description : Defines user interface components used in the master page.
+//
+// Revisions   : alias      date        description
+//               pcupp      2006-09-17  created
+//               karunak      2007-07-16  Removed the fotter manager
+//*********************************************************************************
+
+// Register a namespace for the Catalog-specific UI components
+Type.registerNamespace("Microsoft.UpdateServices.Catalog.UI");
+
+/// <summary>
+///     MasterPage context to provide pages derived from the master access
+///     to it's JavaScript object model.
+/// </summary>
+Microsoft.UpdateServices.Catalog.UI.MasterPageContext = function(basketForm)
+{
+    
+    this._basketForm = basketForm;
+    
+    /// <summary>
+    ///     Initialize the object.
+    /// </summary>
+    this.initialize = function()
+    {
+
+    }
+    
+    /// <summary>
+    ///     Gets the basket form 
+    /// </summary>  
+    this.get_basketForm = function()
+    {
+        return this._basketForm;
+    }
+    
+    
+    
+}
+Microsoft.UpdateServices.Catalog.UI.MasterPageContext.registerClass("Microsoft.UpdateServices.Catalog.UI.MasterPageContext");
+   
+
+
+/// <summary>
+///     Provides behavioral management for the search element.
+/// </summary>
+Microsoft.UpdateServices.Catalog.UI.SearchTextBox = function(searchElement, defaultText, initialText, searchLink, defaultTextClass, normalTextClass)
+{
+    // Private member variables
+    var _defaultText = defaultText;
+    var _initialText = initialText;
+    var _defaultTextClass = defaultTextClass;
+    var _normalTextClass = normalTextClass;
+    var _baseTextClass;
+    var _blurDelegate;
+    var _focusDelegate;
+    var _keyDownDelegate;
+    var _searchLink = searchLink;
+    
+    // Use closure to access 'this' from within methods on this 
+    // object called by events outside the context of this object
+    var _instance = this;
+    
+    // Assert we have valid arguments
+    if(typeof(searchElement) == 'undefined' || searchElement == null)
+    {
+        throw new Microsoft.UpdateServices.Catalog.Exception(
+            'Microsoft.UpdateServices.Catalog.UI.SearchTextBox requires that a valid element be supplied for the searchElement argument', 
+            Microsoft.UpdateServices.Catalog.Constants.ErrorArgumentInvalid);
+    }
+    
+    // Call the base implementation
+    Microsoft.UpdateServices.Catalog.UI.SearchTextBox.initializeBase(this, [searchElement]);
+  
+    /// <summary>
+    ///     Gets the default text associated with this search control.
+    /// </summary>  
+    this.get_defaultText = function()
+    {
+        //Sys.Debug.trace('Microsoft.UpdateServices.Catalog.UI.SearchTextBox.get_defaultText');
+        return _defaultText;
+    }
+    
+    /// <summary>
+    ///     Sets the default text associated with this search control.
+    /// </summary>
+    this.set_defaultText = function(value)
+    {
+        //Sys.Debug.trace('Microsoft.UpdateServices.Catalog.UI.SearchTextBox.set_defaultText');
+        if(value != _defaultText)
+        {
+            _defaultText = value;
+            this.raisePropertyChanged('defaultText');
+        }
+    }
+    
+    /// <summary>
+    ///     Gets the initial text associated with this search control.
+    /// </summary>  
+    this.get_initialText = function()
+    {
+        //Sys.Debug.trace('Microsoft.UpdateServices.Catalog.UI.SearchTextBox.get_initialText');
+        return _initialText;
+    }
+    
+    /// <summary>
+    ///     Sets the intial text associated with this search control.
+    /// </summary>
+    this.set_initialText = function(value)
+    {
+        //Sys.Debug.trace('Microsoft.UpdateServices.Catalog.UI.SearchTextBox.set_initialText');
+        if(value != _initialText)
+        {
+            _initialText = value;
+            this.raisePropertyChanged('initialText');
+        }
+    }  
+    
+    ///<summary>
+    ///    Sets the text for the textbox.(Added after migrating to RTM version
+    ///    of AJAX. Base class of SearchTextBox was Sys.UI.TextBox.Since this
+    ///    class has been moved to the January Futures CTP we need to add this 
+    ///     method as it is no  longer inherited from its base class.
+    ///</summary>
+    this.set_text = function(value) {
+        if (this.get_element().value != value) {
+            this.get_element().value = value;
+            this.raisePropertyChanged('text');
+        }
+    }
+
+    ///<summary>    
+    ///    Gets the text for the textbox.(Added after migrating to RTM version
+    ///    of AJAX. Base class of SearchTextBox was Sys.UI.TextBox.Since this
+    ///    class has been moved to the January Futures CTP we need to add this 
+    ///     method as it is no  longer inherited from its base class.
+    ///</summary>
+    this.get_text = function() {
+        return this.get_element().value;
+    }  
+    
+    /// <summary>
+    ///     Gets the default text class associated with this search control.
+    /// </summary>  
+    this.get_defaultTextClass = function()
+    {
+        //Sys.Debug.trace('Microsoft.UpdateServices.Catalog.UI.SearchTextBox.get_defaultTextClass');
+        return _defaultTextClass;
+    }
+    
+    /// <summary>
+    ///     Sets the default text class associated with this search control.
+    /// </summary>  
+    this.set_defaultTextClass = function(value)
+    {
+        //Sys.Debug.trace('Microsoft.UpdateServices.Catalog.UI.SearchTextBox.set_defaultTextClass');
+        if(value != _defaultTextClass)
+        {
+            _defaultTextClass = value;
+            this.raisePropertyChanged('defaultTextClass');
+        }
+    }
+
+    /// <summary>
+    ///     Gets the normal text class associated with this search control.
+    /// </summary>  
+    this.get_normalTextClass = function()
+    {
+        //Sys.Debug.trace('Microsoft.UpdateServices.Catalog.UI.SearchTextBox.get_normalTextClass');
+        return _normalTextClass;
+    }
+    
+    /// <summary>
+    ///     Sets the normal text class associated with this search control.
+    /// </summary>  
+    this.set_normalTextClass = function(value)
+    {
+        //Sys.Debug.trace('Microsoft.UpdateServices.Catalog.UI.SearchTextBox.set_normalTextClass');
+        if(value != _normalTextClass)
+        {
+            _normalTextClass = value;
+            this.raisePropertyChanged('_normalTextClass');
+        }
+    }
+    
+    /// <summary>
+    ///     Gets the search text.
+    /// </summary>
+    /// <remarks>
+    ///     This property does not raise a property change event.  Monitor
+    ///     the text property instead and get the value of search string
+    ///     on text change to determine if any action is necessary.
+    /// </remarks>
+    this.get_searchText = function()
+    {
+        //Sys.Debug.trace('Microsoft.UpdateServices.Catalog.UI.SearchTextBox.get_searchText');
+        var defaultText = this.get_defaultText();
+        var currentText = this.get_text();
+        var searchText = '';
+        
+        if(currentText != defaultText)
+        {
+            searchText = currentText;
+        }
+        
+        return searchText;
+    }    
+
+    /// <summary>
+    ///     Override initialization to take into account default text.
+    /// </summary>
+    this.initialize = function()
+    {
+        //Sys.Debug.trace('Microsoft.UpdateServices.Catalog.UI.SearchTextBox.initialize');
+        Microsoft.UpdateServices.Catalog.UI.SearchTextBox.callBaseMethod(this, 'initialize');
+        
+        var searchTextBox = this.get_element();
+        
+        _blurDelegate = Function.createDelegate(this, this.showDefaultText);
+        $addHandler(searchTextBox, "blur", _blurDelegate);
+        
+        _focusDelegate = Function.createDelegate(this, this.hideDefaultText);
+        $addHandler(searchTextBox, "focus", _focusDelegate);
+        
+        _keyDownDelegate = Function.createDelegate(this, this.enterKeyCapture);
+        $addHandler(searchTextBox, "keydown", _keyDownDelegate);
+        
+        // Save this to preserve a base level of styling
+        _baseTextClass = (this.get_element()).className;
+        
+        // Set initial text, if it is null, undefined or empty string
+        // the default text will take its place
+        this.set_text(_initialText);
+        this.showDefaultText();
+    }
+
+    /// <summary>
+    ///     Override dispose to clean up event attachment.
+    /// </summary>
+    this.dispose = function()
+    {
+        //Sys.Debug.trace('Microsoft.UpdateServices.Catalog.UI.SearchTextBox.dispose');
+        var searchTextBox = this.get_element();
+        $removeHandler(searchTextBox, "blur", _blurDelegate);
+        $removeHandler(searchTextBox, "focus", _focusDelegate);
+        $removeHandler(searchTextBox, "keydown", _keyDownDelegate);
+        
+        Microsoft.UpdateServices.Catalog.UI.SearchTextBox.callBaseMethod(this, 'dispose');
+    }
+    
+    
+    /// <summary>
+    ///     Override getDescriptor to add additonal properties.
+    /// </summary>
+    this.getDescriptor = function() {
+        //Sys.Debug.trace('Microsoft.UpdateServices.Catalog.UI.SearchTextBox.getDescriptor');
+        var td = Microsoft.UpdateServices.Catalog.UI.SearchTextBox.callBaseMethod(this, 'getDescriptor');
+        
+        td.addProperty('defaultText', String);
+        td.addProperty('initialText', String);
+        td.addProperty('defaultTextClass', String);
+        td.addProperty('normalTextClass', String);
+        td.addProperty('searchText', String);
+        return td;
+    }    
+    
+    /// <summary>
+    ///     Hides the default text in this search text box.
+    /// </summary>
+    this.hideDefaultText = function()
+    {
+        //Sys.Debug.trace('Microsoft.UpdateServices.Catalog.UI.SearchTextBox.hideDefaultText');
+        var defaultText = this.get_defaultText();
+        
+        // If default text exists then try to remove it from this search box
+        if(typeof(defaultText) != 'undefined'
+            && defaultText != null)
+        {
+            if(this.get_text() == defaultText)
+            {
+                this.set_text('');                
+                this.get_element().className=_baseTextClass + ' ' + this.get_normalTextClass();
+            }
+        }
+    }
+    
+    this.enterKeyCapture = function (event) {
+        event = event || window.event;
+        if ((event.which || event.keyCode) == Microsoft.UpdateServices.Catalog.Constants.EnterButtonKeyCode) {
+           _searchLink.click();
+        }
+    }
+    
+    /// <summary>
+    ///     Shows the default text in this search text box.
+    /// </summary>    
+    this.showDefaultText = function()
+    {
+        //Sys.Debug.trace('Microsoft.UpdateServices.Catalog.UI.SearchTextBox.showDefaultText');
+        var defaultText = this.get_defaultText();
+        
+        // If default text exists then assign it to the control
+        if(typeof(defaultText) != 'undefined'
+            && defaultText != null)
+        {
+            // but only if the text contained in this search
+            // box is empty (we don't want to overwrite anything
+            // the end user may have entered
+            //
+            // OR if it contains the exact same text as default
+            // text... adding this because IE needs it to reset
+            // the appropriate class on the text box after
+            // the back button returns the user to a previous
+            // search page
+            var currentText = _instance.get_text();
+            if(currentText == '' ||  currentText == defaultText)
+            {                
+                this.get_element().className=_baseTextClass + ' ' + this.get_defaultTextClass();
+                this.set_text(defaultText);
+            }
+        }
+    }
+}
+
+Microsoft.UpdateServices.Catalog.UI.SearchTextBox.registerClass("Microsoft.UpdateServices.Catalog.UI.SearchTextBox", Sys.UI.Control);
+

@@ -1,0 +1,1896 @@
+﻿/*
+** Basic body styling
+*/
+@charset "UTF-8";
+
+html, body 
+{ 
+	height: 100%; 
+	width: 100%; 
+	border: 0; 
+	padding: 0; 
+	margin: 0; 
+} 
+.mainBody
+{
+	margin: 0px;
+	padding: 0px;
+	font-family: Segoe UI, Verdana, Arial, Sans-Serif;
+	font-size: 0.75em;
+	background-image: url(../Images/bg_ContentGradient.jpg);
+	background-position: left top;
+	background-repeat: repeat-x;
+}
+.visuallyhidden
+{
+  border: 0;
+  clip: rect(0 0 0 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  width: 1px;
+}
+.mainBodyHome
+{
+	margin : 0px;
+	padding : 0px;
+	font-family : Segoe UI, Verdana, Arial, Sans-Serif;
+	font-size : 0.75em;
+	background-image : url(../Images/bg_BigGlobe.jpg);
+	background-repeat : no-repeat;
+	background-color : #6487dc;
+}
+.mainBodyHomeRtl
+{
+	margin : 0px;
+	padding : 0px;
+	font-family : Segoe UI, Verdana, Arial, Sans-Serif;
+	font-size : 0.75em;
+	background-position: right top;
+	background-image : url(../Images/bg_BigGlobe_rtl.jpg);
+	background-repeat : no-repeat;
+	background-color : #6487dc;
+}
+.mainBodyTitle
+{
+	font-family :  Segoe UI, Verdana, Arial, Sans-Serif;
+	font-size: 2.0em;
+	color : #ffffff;
+	position : relative;
+	top : -19px;
+	padding-left : 25px;
+}
+#rtl .mainBodyTitle
+{
+	padding-right : 25px;
+	padding-left: 0px;
+}
+
+.installBodyTitle
+{
+	font-family :  Segoe UI, Verdana, Arial, Sans-Serif;
+	font-size: 2.0em;
+	color : #ffffff;
+	position : relative;
+	top : 150px;
+	padding-left : 25px;
+}
+#rtl .installBodyTitle
+{
+    padding-left : 0px;
+    padding-right : 25px;
+}
+.masterBodyTitle
+{
+	font-family :  Segoe UI, Verdana, Arial, Sans-Serif;
+	font-size: 2.0em;
+	color : #ffffff;
+	position : relative;
+	top : -19px;
+	padding-left : 21px;
+}
+.masterBodyTitle
+{
+    padding-left : 0px;
+    padding-right : 21px;
+}
+.masterBodyBetaTitle
+{
+	font-family :  Segoe UI, Verdana, Arial, Sans-Serif;
+	font-size : 0.7em;
+	font-style : italic;
+	color : #ccc;
+	padding-left : 5px;
+}
+a.masterHomeLink, a.masterHomeLink:visted, a.masterHomeLink:active, a.masterHomeLink:hover
+{
+	text-decoration : none;
+}
+.mainBodyWelcomeTextBoxContainer
+{
+	position : absolute;
+	height: 156px;
+	width: 420px;
+	top : 300px;
+	right : 30px;
+}
+.mainBodyWelcomeTextBox
+{
+	background-color: whitesmoke;
+	border-style : solid;
+	border-width : 1px;
+	border-color : white;
+}
+.mainBodyWelcomeTextTitle
+{
+	background-color : white;
+	border-color : #666666;
+}
+.mainBodyWelcomeTextTitle
+{
+	font-family :  Segoe UI, Verdana, Arial, Sans-Serif;
+	font-size : 1.1em;
+	font-weight : bold;
+	color : Black;
+	padding-left : 5px;
+	padding-bottom : 1px;
+	background-color: lightgray;
+
+}
+.mainBodyWelcomeTextDesc
+{
+	font-family :  Segoe UI, Verdana, Arial, Sans-Serif;
+	font-size : 1.1em;
+	color : black;
+	display : block;
+	padding-left : 10px;
+	padding-right : 5px;
+	padding-top : 5px;
+	background-color: whitesmoke;
+}
+
+.mainBodyWelcomeTextFooter
+{
+	display : block;
+	padding-left : 10px;
+	padding-top : 25px;
+	margin-bottom : 3px;
+	background-color: whitesmoke;
+}
+.mainBodyWelcomeTextFooterLinks
+{
+    font-family: Segoe UI, Verdana, Arial, Sans-Serif;
+    font-size: 1.1em;
+    text-decoration : underline;
+}
+.mainBodyWelcomeTextHR
+{
+	color : #cccccc;
+	height : 1px;
+	display : block;
+	position : relative;
+	top : 30px;
+}
+.footerDividerMessageBox
+{
+	color : white;
+	padding-left: 6px;
+	padding-right: 6px;
+}
+a.welcomeFooterLink:visted, a.welcomeFooterLink:active
+{
+	text-decoration : underline;
+}
+a.welcomeFooterLink:hover
+{
+	color : White;
+	text-decoration : underline;
+}
+.titleTrademark
+{
+	font-size : .3em;
+	vertical-align : super;
+	
+}
+
+/* Remove the outline around the search box that's shown in Chrome. */
+textarea:focus, input:focus 
+{
+    outline: none;
+}
+
+/*
+** General link styling
+*/
+a
+{
+	color: #415BE1;
+	text-decoration: none;
+}
+a:visted, a:hover, a:active
+{
+	color: #3f72b9;
+	text-decoration: none;
+}
+a:hover
+{
+	text-decoration: underline;
+}
+/*
+** Base button styles
+*/
+
+.flatBlueButtonDownload
+{
+    	cursor: pointer;
+    	width: 100%;
+}
+.focus-only:focus {
+	outline: 2px solid black;
+}
+.flatBlueButtonDownloadClose
+{
+    	cursor: pointer;
+    	width: auto;
+        padding: 0.2em 1.6em 0.2em 1.6em;
+}
+.flatBlueButtonClose {
+    background-color: #415BE1;
+    border-color: #bbcbef;
+    font-weight: bold;
+    cursor: hand;
+    color: white;
+    padding: 0.2em 1.6em 0.2em 1.6em;
+}
+
+.flatBlueButtonCloseDownload {
+    background-color: #415BE1;
+    border-color: #bbcbef;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+    width: auto;
+    padding: 0.2em 1.6em 0.2em 1.6em;
+}
+.flatBlueButtonCloseDownload:hover
+{
+	text-decoration: underline;
+}
+.flatGrayButton, .flatBlueButton, .flatLightBlueButton
+{
+	color: #fff;
+	padding: 1px;
+	border-style: solid;
+	border-width: 1px;
+	background-position: center;
+	background-repeat: repeat-x;
+	font-size : 1em;
+}
+.flatGreenButton
+{
+	background-image :url(../Images/bg_GreenGradient.gif);		
+	border-style: solid;
+	border-width: 1px;
+	background-position: center;
+	background-color: #86d5ff;
+	border-color: #bbcbef;
+	height:100%;	
+}
+.flatOrangeButton
+{
+	background-image :url(../Images/bg_OrangeGradient.gif);		
+	border-style: solid;
+	border-width: 1px;
+	background-position: center;
+	background-color: #86d5ff;
+	border-color: #bbcbef;
+	height:100%;	
+}
+.flatRedButton
+{
+	background-image :url(../Images/bg_RedGradient.gif);		
+	border-style: solid;
+	border-width: 1px;
+	background-position: center;
+	background-color: #86d5ff;
+	border-color: #bbcbef;
+	height:100%;	
+}
+.flatBlueButton
+{
+	background-color: #86d5ff;
+	border-color: #bbcbef;
+	background-image: url(../Images/bg_BlueGradient.gif);
+	font-weight: bold;
+	cursor:hand;
+}
+.flatLightBlueButton
+{
+	background-image: url(../Images/bg_LightBlueGradient.gif);
+	border-color: #bbcbef;
+	color:Black;	
+	width:100%;
+	cursor:hand;
+}
+.flatGrayButton
+{
+	background-image: url(../Images/bg_GrayGradient.gif);
+	font-weight: bold;
+}
+.buttonPadding
+{
+    padding:5px 20px;
+}
+
+.transparentButtonWithNoBorder {
+	background-Color: transparent;
+	border: none;
+	color: blue;
+	cursor: pointer;
+}
+/*
+** General spacing and font styles
+*/
+.labelTitle
+{
+	font-weight:bold;	
+	color:#222;
+}
+.textBottomSpacer
+{
+	margin-bottom : 2px;
+}
+.textDoubleSpacer
+{
+	margin-bottom : 14px;
+}
+.textLeftPadding
+{
+	padding-left : 7px;
+}
+#rtl .textLeftPadding
+{
+    padding-right : 7px;
+    padding-left : 0px;
+}
+.textTopPadding
+{
+	padding-top : 7px;
+}
+.textTopTitlePadding
+{
+	padding-top : 15px;
+}
+#buttonsDiv
+{
+	margin-top : 20px;
+}
+.textColorBlue
+{
+	color:#0033FF;
+}
+.textBold
+{
+	font-weight:bold;
+}
+.textNormal
+{
+	font-weight:normal;
+}
+.textSubHeadingColor
+{
+	color:#666666;
+}
+.centerAlign
+{
+	text-align:center;
+}
+.middleAlign
+{
+	vertical-align:middle;
+}
+/*
+** Install page
+*/
+.mainFormInstallTable
+{
+	position : absolute;	
+}
+.installBoxMainContainer
+{
+	
+	position : relative;
+	height: 194px;
+	width: 420px;
+}
+.installBoxMain
+{
+	
+	background-image: url(../Images/bg_YellowGradient.gif);
+	background-position: left top;
+	background-repeat: repeat-x;
+	border-style : solid;
+	border-width : 2px;
+	border-color : white;
+}
+.installBoxTitle
+{
+	background-color : #6487dc;
+	padding-top : 3px;
+	padding-bottom : 3px;
+	text-align : center;
+}
+.installBoxTitleText 
+{
+	color : white;
+	font-weight : bold;
+}
+.installArrowBottom
+{
+	position : relative;
+	margin-bottom : -2px;
+	z-index : 5;
+}
+.installArrowMiddle
+{
+	position : relative;
+	margin-bottom : -3px;
+	margin-left : 1px;
+}
+.installArrowTop
+{    
+	position : relative;
+	margin-bottom : -3px;
+	margin-left : 2px;
+	padding-top:27px;
+}
+.installBoxText
+{
+	padding-top : 15px;
+}
+.installBoxStepText
+{
+    color : black;
+    font-weight : normal;
+	padding-bottom : 10px;
+	margin-left : 1em;
+	margin-right : 2em;
+	display : block;
+}
+.installBoxTextStepNumber
+{
+	margin-left : 1em;
+}
+.installListOrdered
+{
+	color : #6487dc;
+	font-weight : bold;
+	padding-top : 7px;
+	padding-left : 40px;
+	list-style-type : decimal;
+	list-style-position : outside;
+}
+#rtl .installListOrdered
+{
+	padding-right : 40px;
+	padding-left : 0px;
+}
+
+/*
+** Content page area (FAQ, Privacy, Support, thanks, error)
+*/
+.faq, .support, .privacy, .thanks, .error
+{
+	background-image : none;
+}
+.contentPageTitle
+{
+	font-weight:bold;
+	font-size : 1.5em;
+	color : Gray;	
+}
+.contentPageTitleHeader
+{
+	font-weight:bold;
+	font-size : 1.5em;
+	color : Black;
+}
+.contentHeaderTableRow
+{
+	width : 100%;
+	vertical-align : middle;
+
+}
+.contentHeaderTableColumnImage
+{
+	padding-right : 10px;
+}
+#rtl .contentHeaderTableColumnImage
+{
+	padding-left : 10px;
+	padding-right : 0px;
+}
+.contentHeaderErrorNumber
+{
+	color : Gray;
+}
+.contentTextItemSpacer
+{
+	padding-top : 3px;
+	padding-bottom : 3px;
+	display : block;
+	margin-bottom : 1em;
+}
+.contentTextItemSpacerSingleLine
+{
+	padding-top : 3px;
+	padding-bottom : 3px;
+	display : block;
+}
+.contentTextItemSpacerTitle
+{
+	padding-top : 3px;
+	padding-bottom : 3px;
+	font-weight : bold;
+	display : block;
+}
+.contentTextItemSpacerTitleLink {
+    padding-top: 3px;
+    padding-bottom: 3px;
+    font-weight: bold;
+    display: block;
+    text-decoration: underline;
+}
+.contentTextItemSpacerNoBreak
+{
+
+}
+.contentTextItemSpacerNoBreakLink {
+    text-decoration: underline;
+}
+.contentTextItemSpacerBullets
+{
+}
+.dateText
+{
+	color:#222;
+	padding-left : 2px;
+}
+.textContentPageBottomSpacer
+{
+	margin-bottom : 16px;
+}
+.sectionDivider
+{
+	color : #cccccc;
+	height : 1px;
+	display : block;
+	margin-bottom : 1em;
+}
+.contentTextInline
+{
+	font-weight : bold;
+}
+.mainBodyErrorInline
+{
+	margin : 0px;
+	padding : 0px;
+	font-family : Segoe UI, Verdana, Arial, Sans-Serif;
+	font-size : 0.75em;
+}
+.listUnOrdered
+{
+	padding-top : 10px;
+	padding-left : 40px;
+	list-style-type : disc;
+	list-style-position : outside;
+}
+#rtl .listUnOrdered
+{
+	padding-right : 40px;
+	padding-left : 0px;
+}
+.listUnOrderedSub
+{
+	padding-top : 5px;
+	padding-left : 40px;
+	list-style-type : circle;
+	list-style-position : outside;
+
+}
+#rtl .listUnOrderedSub
+{
+	padding-right : 40px;
+	padding-left : 0px;
+}
+.listOrdered
+{
+	padding-top : 10px;
+	padding-left : 40px;
+	list-style-type : decimal;
+	list-style-position : outside;
+}
+#rtl .listOrdered
+{
+	padding-left : 0px;
+	padding-right : 40px;
+}
+.listItem
+{
+	display : list-item;
+}
+A.faqNamedA
+{
+	color : black;
+	text-decoration : none;
+}
+
+
+/*
+** Main header area
+*/
+#headerBox
+{
+	background-image: url(../Images/bg_Globe.jpg);
+	background-repeat : no-repeat;
+	background-color: #6487dc;
+	height: 104px;
+	width: 100%;
+	border-color : gray;
+}
+#rtl #headerBox
+{
+	background-image: url(../Images/bg_Globe_rtl.jpg);
+	background-position:right;
+}
+#headerBoxHome
+{
+	height: 104px;
+	width: 100%;
+	margin-top:115px;
+	border-top : solid 1px #94ace8;
+	border-bottom : solid 1px #94ace8;
+}
+
+.headerTopSpacer
+{
+	height : 100px;
+}
+
+/*
+** Main content area
+*/
+#contentBox
+{
+    padding-left: 20px;
+    padding-right: 20px;
+}
+#mainBoxMaster 
+{ 
+	width: 100%; 
+	margin: 0; 
+	padding: 0; 
+	height: 100%; 
+}  
+#mainBoxHome 
+{ 
+	width: 100%; 
+	margin: 0; 
+	padding: 0; 
+	height: 100%; 
+} 
+#mainBoxInstall 
+{ 
+	width: 100%; 
+	margin: 0; 
+	padding: 0; 
+	height: 97%; 
+}
+#dialogMainBox 
+{ 
+	width: 100%; 
+	margin: 0; 
+	padding: 0; 
+	height: 90%; 
+} 
+/*
+** Main footer area
+** 
+** Note that width and positioning is defined separately 
+** in JavaScript to stick the element to the bottom of the 
+** document or the viewport, whichever is greater.
+*/
+#footerBox
+{
+	border-top: solid 1px #eaeff9;
+	width: 100%; 
+	padding-top: 4px; 
+	margin: 0; 
+	height: 5%; 
+}
+
+/*
+** Footer content styles
+*/
+#footerBox #innerFooterBox
+{
+	padding-top: 10px;
+	padding-bottom: 5px;
+	text-align: left;
+	color: black;
+}
+#rtl #footerBox #innerFooterBox
+{
+	text-align: right;
+}
+#footerHomeBox
+{
+	border-top: solid 1px #94ace8;
+	width: 100%; 
+	padding-top: 4px; 
+	margin: 0; 
+	height: 5%; 
+	
+}
+
+/*
+** Footer content styles
+*/
+#footerHomeBox #innerFooterBox
+{
+	padding-top: 10px;
+	padding-bottom: 5px;
+	text-align: left;
+	color: black;
+}
+#rtl #footerHomeBox #innerFooterBox
+{
+	text-align: right;
+}
+
+/*
+** Header content styles
+*/
+#headerLinkBox
+{
+	color: #fff;
+	padding-bottom: 7px;
+	padding-left: 4px;
+	vertical-align: bottom;
+}
+#rightTopHeaderBox
+{
+	color: #fff;
+	height: 71px;
+	vertical-align: bottom;
+	text-align: right;
+}
+#rtl #rightTopHeaderBox
+{
+	text-align: left;
+}
+#rightBottomHeaderBox
+{
+	color: #fff;
+	height: 31px;
+	vertical-align: bottom;
+	text-align: right;
+	padding-right: 10px;
+}
+#rtl #rightBottomHeaderBox
+{
+	text-align: left;
+	padding-left: 15px;
+	padding-right: 0px;
+}
+.headerNavLink
+{
+	color: #fff;
+	text-decoration: none;
+	padding-right: 7px;
+	padding-left: 7px;
+    text-decoration:underline;
+}
+a.headerNavLink, a.headerNavLink:visted, a.headerNavLink:active, a.headerNavLink:hover
+{
+	color: #fff;
+	text-decoration: underline;
+	padding-right: 7px;
+	padding-left: 7px;
+}
+.basketControl, .basketControl:active, .basketControl:visited
+{
+	color :White;
+	font-weight:bold;
+}
+.basketControlInActive, .basketControlInActive:active, .basketControlInActive:visited
+{
+	color :White;
+	font-weight:normal;
+	cursor :text;
+}
+.basketControlInActive:hover
+{
+	color :White;
+	text-decoration :none;
+}
+.basketControl:hover, a.headerNavLink:hover
+{	
+	color :White;
+	text-decoration :underline;
+}
+/*
+** Styles for the status area in the header
+** to control the basket and login area
+*/
+#headerStatusBox
+{
+	color: #fff;
+}
+#basketStatusDivider
+{
+	padding-right: 7px;
+}
+#loginTextDivider
+{
+	padding-right: 7px;
+}
+#statusDividerText
+{
+	padding-right: 7px;
+}
+#loginTextDivider
+{
+	padding-left: 7px;
+}
+#loginSignOutText
+{
+	padding-right: 12px;
+}
+#basketImage
+{
+	position: relative;
+	z-index: 20;
+}
+#basketBox
+{
+    padding-top: 3px;
+}
+/*
+** Styles for the search box in the header
+*/
+.defaultSearchText
+{
+	color: #666;
+}
+#searchBox
+{
+	position: relative;
+	bottom: -11px;
+	z-index: 10;
+}
+.searchTextBox
+{
+	border: 0px;
+	width: 300px;
+}
+#searchButtonBox
+{
+	background-image: url(../Images/bg_GrayGradient.gif);
+	background-position: left center;
+	border: solid 1px #aaa;
+	padding: 0.4em;
+	height: 100%;
+}
+.searchButtonLink
+{
+	display: block;
+	text-decoration: none;
+	font-weight: bold;
+	color: #3169b5;
+}
+a.searchButtonLink:hover, a.searchButtonLink:visited, a.searchButtonLink:active
+{
+	display: block;
+	text-decoration: none;
+	font-weight: bold;
+	color: #3169b5;
+}
+#searchTextboxBox
+{
+	border-top: solid 1px #aaa;
+	border-left: solid 1px #aaa;
+	border-bottom: solid 1px #aaa;
+	background: white;
+}
+#searchGlowTopBox
+{
+	background-image: url(../Images/bg_SearchGlow_part2.gif);
+	background-repeat: repeat-x;
+}
+#searchGlowPart4aBox
+{
+	background-image: url(../Images/bg_SearchGlow_part4.gif);
+	background-repeat: repeat-y;
+	vertical-align: top;
+}
+#rtl #searchGlowPart4aBox
+{
+	background-image: url(../Images/bg_SearchGlow_part8.gif);
+}
+#searchGlowPart4bBox
+{
+	background-image: url(../Images/bg_SearchGlow_part4.gif);
+	background-repeat: repeat-y;
+	vertical-align: bottom;
+}
+#rtl #searchGlowPart4bBox
+{
+	background-image: url(../Images/bg_SearchGlow_part8.gif);
+}
+#searchGlowBottomBox
+{
+	background-image: url(../Images/bg_SearchGlow_part6.gif);
+	background-repeat: repeat-x;
+}
+#searchGlowPart8bBox
+{
+	background-image: url(../Images/bg_SearchGlow_part8.gif);
+	background-repeat: repeat-y;
+	vertical-align: top;
+}
+#rtl #searchGlowPart8bBox
+{
+	background-image: url(../Images/bg_SearchGlow_part4.gif);
+}
+
+#searchGlowPart8aBox
+{
+	background-image: url(../Images/bg_SearchGlow_part8.gif);
+	background-repeat: repeat-y;
+	vertical-align: bottom;
+}
+#rtl #searchGlowPart8aBox
+{
+	background-image: url(../Images/bg_SearchGlow_part4.gif);
+}
+
+#searchGlowPart1, #searchGlowPart7
+{
+	float: left;
+}
+#searchGlowPart3, #searchGlowPart5
+{
+	float: right;
+}
+
+
+/*
+** Footer content styles
+*/
+.footerLink {
+    text-decoration: underline;
+}
+a.footerLink
+{
+	color: #3f72b9;
+}
+#footerHomeBox a.footerLink 
+{
+    color: black;
+    text-decoration: underline;
+}
+.footerDivider
+{
+	padding-left: 7px;
+	padding-right: 7px;
+}
+
+
+
+
+/*
+** Scoped View Page Styles
+*/
+#contentSection
+{
+	padding-top:15px;
+}
+.inlinePadding
+{
+	padding:20px 20px 0px 20px;
+}
+.inlineCloseButton
+{
+	text-align:right;
+	padding:20px 20px 0px 20px;
+	margin-bottom:10px;
+}
+.inlineCloseButtonCenter
+{	
+	text-align:center;
+	padding:20px 20px 0px 20px;
+	margin-bottom:10px;
+}
+.noDisplay
+{
+	display:none;
+	height:100%;
+}
+
+/*
+** Tab styles
+*/
+#tabSection
+{
+	border: solid 1px gray;
+	margin-top :20px;	
+	border-bottom: none 0px;
+	background: #fff; 
+}
+#tabContainer
+{
+	border-bottom: solid 1px gray;
+	padding: 1em 0px .2em 4px;
+}
+#rtl #tabContainer
+{
+	padding: 1em 4px .2em 0px;
+}
+.tab
+{	
+	padding: 0.2em 1.6em 0.2em 1.6em;
+	border:solid 1px gray;
+	background-color: #fff;
+	cursor:pointer;
+	border-bottom-color:#fff;
+	white-space:nowrap;
+	color:Black;
+}
+a.tab:hover,a.tab:active,a.tab
+{	
+	text-decoration : none;
+	color:Black;
+}
+
+.tabActive
+{	
+	border-bottom-color:#fff;
+	font-weight: bold;
+}
+
+.tabInactive
+{	
+	background-color: #f6f7fb;
+	background-image: url(../Images/bg_GrayGradient.gif);
+	background-position: left center;
+	background-repeat: repeat-x;
+	border-bottom: 1px solid gray;
+}
+
+/*
+** Tab body styles
+*/
+#tabBody
+{
+	background-color: white;
+	border: solid 1px gray;	
+	border-top: 0px;
+	padding:7px 15px 15px 15px;
+} 
+.tabBodyContentBox
+{
+	overflow-x: auto;
+	overflow-y:scroll;
+    border: 1px solid #ccc;
+    vertical-align: top;
+    padding: 7px;
+    height:16.2em;
+}
+.tabDriverPackageContentBox
+{
+	height:3.5em;
+	overflow-y : scroll;
+	overflow-x : hidden;
+	border:1px solid gray;
+	padding:7px;
+	margin-bottom : 7px;
+}
+.tabDriverPackageBodyContentBox
+{
+    height: 6.7em;	
+    width:60%;
+    overflow:hidden;
+}
+.tabBodySupersedenceBox
+{
+    width:60%;
+}
+.boxTitleContainer
+{
+    margin-top: 15px;
+}
+.boxTitle
+{
+	vertical-align: top;
+	background-color: white;
+	color: #000;
+	padding-left: 0.5em;
+	padding-right: 0.5em;
+	margin-left:10px;
+	position: relative;
+	top:-15px;
+}
+#rtl .boxTitle
+{
+	margin-left:0px;
+}
+.boxTitleDetails
+{
+	vertical-align: top;
+	background-color: white;
+	color: #000;
+	padding-left: 0.5em;
+	padding-right: 0.5em;
+	margin-left:10px;
+	position: relative;
+}
+#languageContentBody
+{
+	height:15em;
+}
+
+#overviewLeftBox
+{
+	padding-right: 7px;		
+	border-right: 1px solid #ccc;
+	width: 60%;
+	vertical-align: top;
+}
+#rtl #overviewLeftBox
+{
+	padding-left: 7px;		
+	padding-right: 0px;
+	border-left: 1px solid #ccc;
+	border-right-style: none;
+}
+#overviewRightBox
+{
+	padding-left: 7px;
+	width: 40%;
+	vertical-align: top;
+}
+#rtl #overviewRightBox
+{
+	padding-left: 0px;
+	padding-right: 7px;
+}
+
+#supersededbyInfo
+{
+	height:4em;
+	overflow-y : scroll;
+	overflow-x : hidden;
+	border:1px solid gray;
+	padding:7px;
+	margin-bottom : 7px;
+	margin-top : 4px;
+}
+#supersedesInfo
+{
+	height:4.5em;
+	overflow-y : scroll;
+	padding:7px;
+	overflow-x : hidden;
+	border:1px solid gray;
+	margin-top : 4px;
+}
+/*
+** Scoped View Page Styles
+*/
+
+/*
+** Table layout styles
+*/
+#layoutTable
+{
+	width:100%;
+}
+
+/*
+** Control the minimum width of the browser
+*/
+.browserWidthSpacer
+{
+	width: 765px;
+	height: 1px;
+}
+	
+/*
+** Search results
+*/
+#innerResultsBody
+{
+	height:25em;
+	overflow-y:auto;
+	overflow-x:auto;
+	border:1px solid gray;
+}
+.resultsRow
+{
+	padding-bottom :7px;
+	padding-top :7px;
+	border-bottom : 1px solid gray;
+	overflow:hidden;
+}
+.buttonRow
+{
+	text-align:center;
+}
+.dataGridFixedHeader 
+{
+	border-bottom: solid 1px gray;	
+	background:#f6f7fb url(../Images/bg_GrayGradient.gif) center repeat-x;		
+}
+
+/*
+/*
+** This element is being used for styling the display
+** and is taking 100% of the width so an innerSearchCriteria
+** has also been established to control padding and margins
+** without breaking the alignment between content and footer
+** areas.
+*/
+#searchCriteria
+{
+	display: block;
+	border: solid 2px #999;
+	background-color: #EEE;
+	width: 100%;
+	margin-top: 0.25em;
+}
+
+#innerSearchCriteria
+{
+	margin: 0.5em;
+}
+
+/*
+** Apply a 0.5em margin between list elements
+** but subtract the margin back from the leftmost
+** element by setting -0.5em in the surrounding div
+*/
+.sideBySideList
+{
+	color: #000;
+	display: inline;
+	margin-left: -0.5em;
+}
+
+.sideBySideList input
+{
+	margin-left: 0.5em;
+}
+
+.searchCriteriaDiv
+{
+	margin: 0.5em;
+}
+
+.searchCriteriaList
+{
+	width: 400px;
+	font-family: Segoe UI, Verdana, Arial, Sans-Serif;
+}
+
+.searchCriteriaLabel
+{
+	display: block;
+	font-family: Segoe UI, Verdana, Arial, Sans-Serif;
+}
+
+.startSearchButton
+{
+	margin: 0.5em;
+	border: solid 1px #000;
+}
+
+.searchStringDiv
+{
+	display: inline;
+}
+
+.startSimpleSearchButton
+{
+	display: inline;
+	border: solid 1px #000;
+}
+
+/*
+** Define the styles for presenting search results
+*/
+
+.updateAlternateRow
+{
+	background-color: #EEE;
+}
+
+.headerText a, .headerText a:visited, .headerText a:active
+{
+	text-decoration: none;
+	color: #000;
+	
+}
+
+.headerText
+{	
+	background-color :white;
+}
+.pageNumbers a:hover
+{
+	text-decoration: underline;
+}
+
+.resultspadding
+{
+	padding:4px 5px 4px 5px;
+}
+
+.resultsHeaderpadding
+{
+	padding:5px;	
+}
+.resultsHeaderRightBorder
+{
+	border-right:1px solid gray;	
+}
+.resultsbottomBorder
+{
+	border-bottom:1px solid #ccc;
+	border-top:0px;
+	border-right:0px;
+	border-left:0px;
+}
+.resultsNavigation
+{
+	margin:10px 0px 5px 0px;
+	width:100%;
+}
+.resultsBorder
+{
+	border: 1px solid gray;
+	height:.01em;
+	
+}
+.resultsClassWidth
+{
+	width:10em;
+}
+.resultsButtonWidth
+{
+	width:11em;
+}
+.resultsSizeWidth
+{
+	width:6em;
+}
+.resultsVersionWidth
+{
+	width:5em;
+}
+.resultsIconWidth
+{
+	width:2em;
+}
+.resultsDateWidth
+{
+	width:7.8em;
+}
+.resultsProductWidth
+{
+	width:10em;
+}
+.resultsCompanyWidth
+{
+	width:10em;
+}
+.resultsAddWidth
+{
+	width:3em;
+}
+.resultsGridHeader
+{
+	display: none;
+}
+.inactiveLink
+{
+	color:Gray;
+	
+}
+.resultsScrollWidth
+{
+	width:17px;
+	background-color:Transparent;
+}
+.tableContainer, .dialogTableContainer
+{
+	border:1px solid gray;	
+	border-top:0px;
+}
+.dialogTableContainer
+{
+	margin-top :10px;
+}
+
+.tableContainer table, #tableContainer table
+{
+	width:100%;
+}
+
+.resultsBackGround
+{	
+	background-color:White;
+}
+.resultsBorderRight
+{	
+	border-right:1px solid gray;
+	border-bottom :0px;
+	border-left :0px;
+	border-top :0px;
+}
+#rtl .resultsBorderRight
+{	
+	border-left:1px solid gray;
+	border-bottom :1px solid gray;
+	border-right :0px;
+	border-top :1px solid gray;
+}
+
+.resultsNOBorder
+{
+	border:0px;
+}
+.showSortArrow
+{
+	visibility:visible;
+	vertical-align :middle ;
+	padding-left:10px;
+}
+#rtl .showSortArrow
+{
+	padding-left:0px;
+	padding-right: 10px;
+}
+.hideSortArrow
+{
+	visibility:hidden;
+}
+.notVisible
+{	
+	visibility:hidden;
+}
+.tableContainer table tr:hover, .tableContainer tr.over,#tableContainer table tr:hover, #tableContainer tr.over  
+{ 
+	background-color: #ffffcb; 
+}
+.countSpacing
+{
+	padding-right:10px;
+}
+#rtl .countSpacing
+{
+	padding-left:10px;
+	padding-right:0px;
+	display:inline-block;
+}
+.ResultsHeaderTD, .progressHeaderTD, .cancelHeaderTD
+{	
+	border-top:1px solid gray;
+	border-bottom:1px solid gray;	
+}	
+.cancelHeaderTD
+{
+	text-align:center;
+}
+.ResultsHeaderTD
+{	
+	background:#f6f7fb url(../Images/bg_GrayGradient.gif) center repeat-x;	
+}	
+.progressHeaderTD, .cancelHeaderTD
+{	
+	background: url(../Images/bg_OrangeGradient.gif) center repeat-x;	
+}
+
+.progressTD
+{
+	background:#f6f7fb url(../Images/bg_GrayGradient.gif) center repeat-x;	
+	padding-right :5px;
+	
+}
+#rtl .progressTD
+{
+	padding-left :3px;
+	padding-right :2px;
+}
+.progressOuterBox
+{
+    margin-bottom: -1.5em;
+    width: 100%;
+    text-align: left;
+    height: 100%;
+    border: 1px solid gray;
+}
+.progressTextCommon
+{
+    vertical-align: middle;
+    padding:3px;
+    white-space:nowrap;
+}
+.cancelTD
+{
+	width:2em;
+	background:#f6f7fb url(../Images/bg_GrayGradient.gif) center repeat-x;	
+	text-align :center;
+}
+.cancelTDDisabled, .cancelHeaderDisabled
+{
+	width:2em;
+	background:#f6f7fb url(../Images/bg_GrayGradient.gif) center repeat-x;
+	border-bottom:1px solid #ccc;	
+	padding:4px 5px 4px 5px;
+	text-align :center;
+}
+.cancelHeaderDisabled
+{
+	border:1px solid gray;	
+	border-left:0px;
+	text-align :center;
+}
+.cancelTD:hover
+{
+	background:#f6f7fb url(../Images/bg_OrangeGradient.gif) center repeat-x;	
+}
+
+.sortImagePadding
+{
+	vertical-align :middle ;
+}
+.basketIntroTextSpacing
+{
+	padding-bottom :10px;
+}
+#importCheckbox
+{
+	padding-right :10px;
+}
+#rtl #importCheckbox
+{
+	padding-left :4px;
+	padding-right : 0px;
+}
+/*
+** Download dialog styles
+*/
+.dialogBody
+{
+	margin: 0px;
+	padding: 0px;
+	font-family: Segoe UI, Verdana, Arial, Sans-Serif;
+	font-size: 0.75em;
+	background-image: url(../Images/bg_DialogGradient.jpg);
+	background-position: left top;
+	background-repeat: repeat-x;
+}
+#innerDialogBox
+{
+	padding: 15px 30px 0px 30px;
+}
+#downloadDialogButtonsBox
+{
+	position: absolute;
+	text-align: right;
+	padding-top: 12px;
+	border-top: solid 1px #ccc;
+	width: 100%; 
+	padding-top: 4px; 
+	margin: 0; 
+	height: 5%;
+}
+#downloadSettingsFolderSelectionButton
+{	
+	margin-left: 8px;
+}
+#rtl #downloadSettingsFolderSelectionButton
+{	
+	margin-right: 8px;
+	margin-left : 0px;
+}
+
+.noResultsSpacing
+{
+	padding-top:15px;
+}
+.moreReults {
+    padding-top: 10px;
+    color: #BD0000
+}
+.dialogHeader
+{
+	font-size: 1.6em;
+	color: #666;
+	padding-bottom: 12px;
+}
+.dialogSubHeader
+{
+	padding-bottom :10px;
+}
+#downloadSettingsTypeLabelBox
+{
+	padding-top: 24px;
+	padding-bottom: 4px;
+}
+#downloadSettingsTypeSelection
+{
+	width: 360px;
+}
+#downloadSettingsFolderLabelBox
+{
+	padding-top: 12px;
+	padding-bottom: 4px;
+}
+#downloadSettingsFolderSelectionInput
+{
+	width: 354px;
+}
+#innerDownloadDialogButtonsBox
+{
+	padding-right: 30px;
+	padding-bottom:10px;
+}
+#rtl #innerDownloadDialogButtonsBox
+{
+	padding-left: 30px;
+	padding-right:0px;
+}
+#eulaTitles
+{
+	height:35px;
+	overflow:auto;
+	margin-bottom:10px;
+	font-weight:bold;	
+}
+#eulaExplain
+{
+	padding-top:25px;
+}
+#eulaFrame
+{
+	height:180px;
+	width:100%;
+}
+#eulaNotice
+{
+	width:100%;
+}
+.downloadSettingsWarningPositioning
+{
+	padding-top: 24px;
+}
+.dialogDetail
+{
+	padding-bottom : 10px;
+}
+.cancelButton
+{
+	cursor :hand;
+}
+.cancelButtonInactive
+{
+	cursor:auto ;
+}
+.hotfixTitles
+{
+	height:30px;
+	overflow:auto;
+	font-weight:bold;
+}
+.hotfixNotice
+{
+	 border:1px solid gray;
+	 height:120px;
+	 overflow:auto;
+	 padding:5px;
+	 background-color:white
+}
+.hotfixCheckBox
+{
+	padding-top:5px;
+}
+.hotfixEmail
+{
+	border-top: solid 1px #ccc;
+	padding-top:5px;
+}
+.hotfixEmailInputBox
+{
+	margin-top:3px;
+}
+#innerDownloadDialogButtonsBox input
+{
+	cursor:hand;
+}
+.downloadDialogProgressText
+{
+	font-weight :bold;
+	color :White;
+}
+.poupInfoDiv
+{
+	padding:5px;
+	position:absolute;
+	left:200px;
+	top:200px;
+	z-index:1;
+	border:1px solid gray;
+	width:500px;
+	height:8em;
+	background:white;
+	display:none;
+}
+.poupInfoText
+{
+	padding-left:5px;
+	padding-top:12px;
+	color:red;
+}
+#rtl .poupInfoText
+{
+    padding-right:5px;
+    padding-left:0px;
+}
+.mainContentHome
+{
+    padding-top: 80px; 
+    padding-right:30px;
+}
+#rtl .mainContentHome
+{
+    padding-left: 30px; 
+    padding-right: 0px;
+}
+.textAlignCenter
+{	
+    text-align: center;	
+}
+.textAlignRight
+{
+    text-align: right;
+}
+#rtl .textAlignRight
+{
+    text-align: left;
+}
+.textAlignLeft
+{
+    text-align: left;
+}
+#rtl .textAlignLeft
+{
+    text-align: right;
+}
+
+.restrictionLegendTable
+{
+     background: #FFFFCC;
+     border-width: 1px; 
+     border-color:Gray;         
+     border-style:solid;     
+}
+
+
+/*
+ styles used on credentials dialog.
+*/
+.credentialsForm
+{
+ position:relative; 
+ top: 6px; 
+ left: 0px; 
+ height: 88px; 
+ width: 342px;
+}
+
+.credentialsimage
+{
+	width: 385px; 
+	height: 63px; 
+	position: relative;
+    top: -6px; 
+    left: -5px;	
+}
+
+.credentialsOuterDiv
+{
+  width: 383px;
+  float: left;
+  cursor: auto; 
+  font-size: xx-small; 
+  background-image:url("../Images/bg_DialogGradient.jpg");
+  position: fixed; 
+  top: 0px; 
+  left: 2px; 
+  
+  height: 327px;
+}
+
+#credentialsInfoTextDiv
+{
+ position: relative; 
+ top: 16px; 
+ left: 20px;
+  width:85%;
+}
+
+#credentialsInnerDiv
+{
+ position:relative;
+ left:32px; 
+ top: 12px; 
+ width: 319px; 
+ height: 48px;
+}
+
+#creduibuttons
+{
+ position:relative;
+ top:27px; 
+ left:209px; 
+ width: 131px;
+}
+
+#creduibuttons #okbtn
+{
+ /*font-size :150%; */
+ height:26px; 
+ width:40px;
+}
+
+#creduibuttons #cancelbtn
+{
+ position :relative; 
+ left:10px; 
+ /*font-size:150%; */
+ height:26px; 
+ width:60px;
+}
+
+#rtl #creduibuttons
+{
+ right:209px; 
+}
+
+#rtl #cancelbtn
+{
+ right:10px;
+}
+
+
+#rtl #credentialsInfoTextDiv
+{	
+	right:20px;
+}
+#rtl #credentialsInnerDiv
+{
+	right:32px;
+}
+
+#rtl #usernametb
+{	
+	right:250px;
+}
+#rtl #passwordtb
+{
+	right:250px;
+}

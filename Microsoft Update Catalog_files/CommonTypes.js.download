@@ -1,0 +1,577 @@
+﻿//*********************************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+//
+// File Name   : MasterComponents.js
+// Description : Defines user interface components used in the master page.
+//
+// Revisions   : alias      date        description
+//               pcupp      2006-09-17  created
+//               karunak    2006-12-21  added ClientValidator
+//               karunak    2007-04-24  added size clas and updated the update info class to reflect the 
+//                                      binary language selection
+//*********************************************************************************
+
+Type.registerNamespace("Microsoft.UpdateServices.Catalog");
+
+/// <summary>
+///     Base exception class for the Catalog.
+/// </summary>
+Microsoft.UpdateServices.Catalog.Exception = function (sMessage, iCode) {
+    Microsoft.UpdateServices.Catalog.Exception.initializeBase(this);
+
+    // data members for the message and error code
+    this.message = sMessage;
+    this.code = iCode;
+
+    this.get_code = function () {
+        return this._code;
+    }
+}
+Microsoft.UpdateServices.Catalog.Exception.registerClass("Microsoft.UpdateServices.Catalog.Exception");
+
+
+/// <summary>
+///     Thrown by the Update class to indicate internal failure
+/// </summary>
+Microsoft.UpdateServices.Catalog.UpdateException = function (sMessage, iCode) {
+    Microsoft.UpdateServices.Catalog.UpdateException.initializeBase(this, arguments);
+}
+Microsoft.UpdateServices.Catalog.UpdateException.registerClass("Microsoft.UpdateServices.Catalog.UpdateException", Microsoft.UpdateServices.Catalog.Exception);
+
+/// <summary>
+///     Thrown when an argument is invalid.
+/// </summary>
+Microsoft.UpdateServices.Catalog.ArgumentException = function (sMessage, iCode) {
+    Microsoft.UpdateServices.Catalog.ArgumentException.initializeBase(this);
+}
+
+Microsoft.UpdateServices.Catalog.ArgumentException.registerClass("Microsoft.UpdateServices.Catalog.ArgumentException", Microsoft.UpdateServices.Catalog.Exception);
+
+
+/// <summary>
+///     This class represents a top level update.
+/// </summary>
+Microsoft.UpdateServices.Catalog.Update = function (uidInfo) {
+    //having the names deviate from the JScript coding conventions of having _ for private members
+    //as these are used in Jason serializer to align with the C# properties 
+    this.size = 0;
+    this.languages = "";
+    this.uidInfo = uidInfo;
+    //extract updateid                     
+    var firstSeparatorIndex = this.uidInfo.indexOf(Microsoft.UpdateServices.Catalog.Constants.UpdateInfoSeparator);
+    if (firstSeparatorIndex != -1) {
+        this.updateID = this.uidInfo.substr(0, firstSeparatorIndex);
+        var sizelanguages = this.uidInfo.substring(firstSeparatorIndex + 1);
+        //extract size and languages
+        var secondSeparatorIndex = sizelanguages.indexOf(Microsoft.UpdateServices.Catalog.Constants.UpdateInfoSeparator);
+        if (secondSeparatorIndex != -1) {
+            this.size = parseInt(sizelanguages.substr(0, secondSeparatorIndex));
+            if (isNaN(this.size)) {
+                this.size = 0;
+            }
+            this.languages = sizelanguages.substring(secondSeparatorIndex + 1);
+        }
+    }
+    else {
+        this.updateID = uidInfo;
+    }
+
+    /// <summary>
+    ///     Retunrs the update ID.
+    /// </summary>
+    this.get_uid = function () {
+        return this.updateID;
+    }
+
+    /// <summary>
+    ///     Retunrs the size.
+    /// </summary>
+    this.get_size = function () {
+        return this.size;
+    }
+
+    /// <summary>
+    ///     Retunrs the languages.
+    /// </summary>
+    this.get_languages = function () {
+        return this.languages;
+    }
+
+    /// <summary>
+    ///     Creates a serialized reprezentation of the update.
+    /// </summary>
+    this.getSerializationData = function () {
+        return this.uidInfo;
+    }
+}
+
+/// <summary>
+///     This is the current verion of the update.
+/// </summary>
+/// <remarks>
+///     It should be increased every time you go live with a new serialization layout. 
+/// </remarks>
+Microsoft.UpdateServices.Catalog.Update.VERSION = 1;
+
+/// <summary>
+///     Creates an update object from serialized data.
+/// </summary>
+Microsoft.UpdateServices.Catalog.Update.fromSerializationData = function (serializedData, version) {
+    //every time you increase the version number you should add a new case to the switch  
+    switch (version) {
+        case 1:
+            return constructUpdateFromVersion1(serializedData);
+        default:
+            throw new Microsoft.UpdateServices.Catalog.UpdateException("Version in unknown.", Microsoft.UpdateServices.Catalog.Constants.ErrorPersistenceUpdateVersionUnknown);
+    }
+
+    /// <summary>
+    ///     Constructs an update object from a string that have been created by serilaizing a version 1 update.
+    /// </summary>
+    function constructUpdateFromVersion1(serializedData) {
+        //[TO DO] - verify if serializedData is in version 1 format, otherwise throw;
+        //the following verification is a sample:
+        //        if(serializedData.length != 38 || serializedData.charAt(0) != "{" || serializedData.charAt(37) != "}")
+        //            throw new Microsoft.UpdateServices.Catalog.UpdateException("Serialized data format could not be understood by the deserializer.", Microsoft.UpdateServices.Catalog.Constants.ErrorPersistenceUpdateDataCorrupted);
+        return new Microsoft.UpdateServices.Catalog.Update(serializedData);
+    }
+}
+
+Microsoft.UpdateServices.Catalog.Update.registerClass("Microsoft.UpdateServices.Catalog.Update");
+
+// Register a namespace for the Catalog-specific UI components
+Type.registerNamespace("Microsoft.UpdateServices.Catalog.UI");
+
+/// <summary>
+///    Contains the script for client control setup and error handling.
+///    It inherits from Sys.UI.Control to make use of the dispose method.
+/// </summary>
+Microsoft.UpdateServices.Catalog.UI.ClientControl = function (controlElement, version) {
+    //Constants used only in this class
+    var ReadyStateComplete = 4;
+
+    //Data members    
+    this._version = version;
+    this._ctrlElement = controlElement;
+    this._readyStateDelegate = null;
+    //A boolean value indicating whether the user should be redirected to a different page
+    //after the control is successfully installed.     
+    this._redirect = true;
+
+    Microsoft.UpdateServices.Catalog.UI.ClientControl.initializeBase(this);
+
+    /// <summary>
+    ///    Initializes the client control.
+    /// </summary>
+    this.initialize = function () {
+        Microsoft.UpdateServices.Catalog.UI.ClientControl.callBaseMethod(this, 'initialize');
+        if (window.location.href.indexOf(Microsoft.UpdateServices.Catalog.Constants.PageInstall) == -1) {
+            this._redirect = false;
+        }
+
+        var cpuClass = navigator.cpuClass.toLowerCase();
+        //Load the control only for supported platforms
+        if (Microsoft.UpdateServices.Catalog.Constants.x86 == cpuClass || Microsoft.UpdateServices.Catalog.Constants.x64 == cpuClass) {
+            var now = new Date();
+            var codeBase = "ClientControl/" + "en/" + cpuClass + "/MuCatalogWebControl.cab?" + now.getTime() + "#version=" + this._version;
+            this._ctrlElement.outerHTML = "<object style='display: none;' id='MuCatWebCtl' classid='CLSID:5AE58FCF-6F6A-49B2-B064-02492C66E3F4' codebase='" + codeBase + "'></object>";
+
+            this._ctrlElement = $get('MuCatWebCtl');
+
+            this._readyStateDelegate = Function.createDelegate(this, this.handleReadyState);
+            this._ctrlElement.attachEvent('onreadystatechange', this._readyStateDelegate);
+        }
+    }
+
+    /// <summary>
+    ///     Override dispose to clean up event attachment.
+    /// </summary>
+    this.dispose = function () {
+        if (null != this._readyStateDelegate) {
+            $removeHandler(this._ctrlElement, "readystatechange", this._readyStateDelegate);
+        }
+
+        Microsoft.UpdateServices.Catalog.UI.ClientControl.callBaseMethod(this, 'dispose');
+    }
+
+
+    /// <summary>
+    ///    Event handler for readystate change.
+    ///    The readystate of the control object will change after you click on the yellow bar and
+    ///    install the control. After the yellow bar is clicked, IE reloads the page, then
+    ///    prompt the user to select 'Install'. So the installation happens after the page has been
+    ///    loaded. If isInstalled() is called in the pageLoad event, it will still return false.
+    ///    However, the readyStateChange event is independent of page load. It fires whenever the
+    ///    readyState of the control object changes, which is after the IE installation finishes.
+    ///    Therefore, we can call isInstalled() after the readyStateChange event fires to check
+    ///    whether the control was installed successfully.
+    /// </summary>
+    this.handleReadyState = function () {
+        if (ReadyStateComplete == this._ctrlElement.readyState && this.isInstalled() && true == this._redirect) {
+
+            var qs = window.location.search.toLowerCase();
+            var qsObj = new Microsoft.UpdateServices.Catalog.QueryString(qs);
+
+            //If the query string contains a referring page, redirect back to the referring page
+            //with the original query string after stripping the referring page param from it.
+            //This will be used by ScopedView  and Search Page to redirect back
+            // from the Install page once control is successfully installed.
+            var referringPage = qsObj.getValue(Microsoft.UpdateServices.Catalog.Constants.QueryStringReferringPage);
+
+            if (referringPage && (referringPage.toLowerCase() == Microsoft.UpdateServices.Catalog.Constants.PageSearch.toLowerCase()
+                || referringPage.toLowerCase() == Microsoft.UpdateServices.Catalog.Constants.PageScopedView.toLowerCase()
+                || referringPage.toLowerCase() == Microsoft.UpdateServices.Catalog.Constants.PageHome.toLowerCase())) {
+                var qs = qsObj.removeKey(Microsoft.UpdateServices.Catalog.Constants.QueryStringReferringPage);
+                var redirectURL = referringPage;
+                if (qs.length > 1) {
+                    redirectURL = redirectURL + '?' + qs;
+                }
+                window.location.href = redirectURL;
+            }
+            else {
+                window.location.href = Microsoft.UpdateServices.Catalog.Constants.PageHome + qs;
+            }
+        }
+    }
+
+    /// <summary>
+    ///    Determines whether the ActiveX control has been installed or not.
+    ///    This function only returns the installation status at the time it is called.
+    ///    In other words, if the control is not installed, and this function is called at
+    ///    page load time, it will return false. After you click the yellow bar and
+    ///    install the control, you can call this function again in the event handler for
+    ///    onReadyStateChange to detect whether the control is successfully installed.
+    /// </summary>
+    this.isInstalled = function () {
+        return (null != this._ctrlElement.object);
+    }
+
+    /// <summary>
+    ///    Return the object reference of the control.
+    /// </summary>
+    this.getObject = function () {
+        return this._ctrlElement.object;
+    }
+}
+Microsoft.UpdateServices.Catalog.UI.ClientControl.registerClass("Microsoft.UpdateServices.Catalog.UI.ClientControl", Sys.Component);
+
+/// <summary>
+///    Contains the script required to validate the wsus querystring parameter and the WSUS import API
+/// </summary>
+Microsoft.UpdateServices.Catalog.UI.ClientValidator = function (catalogControl) {
+    this._catalogControl = catalogControl;
+
+    // Call the base implementation
+    Microsoft.UpdateServices.Catalog.UI.ClientValidator.initializeBase(this);
+
+    /// <summary>
+    ///   Checks the Wsus import APIs if import is requested and if the import APIs are not present takes to the thanks page.
+    /// </summary>
+    /// <param name="sku">
+    ///    The sku value passed in the page through form/querystring 
+    ///</param>
+    this.checkWsusAPI = function (sku) {
+        var control;
+        var wsusAPIpresent;
+        try {
+            control = this._catalogControl.object;
+            wsusAPIpresent = control.IsWsusApiPresent();
+        }
+        catch (e) {
+            window.location.href = Microsoft.UpdateServices.Catalog.Constants.PageError + "?id=" + e.number;
+            return false;
+        }
+
+        //if sku is provided and if the sku provided doen't match to the 3 accepted or the wsus APIs are not presnet then error case
+        if (sku != Microsoft.UpdateServices.Catalog.Constants.EmptyString) {
+            if (
+                !(
+                    sku == Microsoft.UpdateServices.Catalog.Constants.SkuWsus ||
+                    sku == Microsoft.UpdateServices.Catalog.Constants.SkuSms ||
+                    sku == Microsoft.UpdateServices.Catalog.Constants.SkuSce
+                )
+                ||
+                !(wsusAPIpresent)
+            ) {
+                window.location.href = Microsoft.UpdateServices.Catalog.Constants.PageError + "?id=" + Microsoft.UpdateServices.Catalog.Constants.ErrorWsusImportApiNotPresent;
+                return false;
+            }
+        }
+
+        return true;
+    }
+}
+Microsoft.UpdateServices.Catalog.UI.ClientValidator.registerClass("Microsoft.UpdateServices.Catalog.UI.ClientValidator", Sys.Component);
+
+/// <summary>
+///     Query string class for the Catalog.
+/// </summary>
+/// <param name="queryString">
+///    This param is in the format "?key1=val1&key2=val2" 
+///</param>
+
+Microsoft.UpdateServices.Catalog.QueryString = function (queryString) {
+    if (queryString.length > 1) {
+        this._queryString = queryString.substring(1, queryString.length);
+    }
+    else {
+        this._queryString = null;
+    }
+
+    this._keyValuePairs = new Array();
+    if (this._queryString != null) {
+        for (var i = 0; i < this._queryString.split("&").length; i++) {
+            this._keyValuePairs[i] = this._queryString.split("&")[i];
+        }
+    }
+    ///<summary>
+    ///   Gets the value of the query string param=key.
+    ///</summary>
+    this.getValue = function (key) {
+        for (var j = 0; j < this._keyValuePairs.length; j++) {
+            if (this._keyValuePairs[j].split("=")[0] == key)
+                return this._keyValuePairs[j].split("=")[1];
+        }
+        return false;
+    }
+    ///<summary>
+    ///   Removes the query string param key from the list.
+    ///</summary>    
+    this.removeKey = function (key) {
+        var keyIndex = -1;
+        for (var i = 0; i < this._keyValuePairs.length; i++) {
+            if (this._keyValuePairs[i].split("=")[0] == key) {
+                keyIndex = i;
+                break;
+            }
+        }
+        this._keyValuePairs.splice(keyIndex, 1);
+        this._reBuildQS();
+        return (this._queryString);
+    }
+    ///<summary>
+    ///   Updates the query string from the  values stored in the 
+    ///   key value pair array.
+    ///</summary>
+    this._reBuildQS = function () {
+        var queryStringNew = '';
+        for (var j = 0; j < this._keyValuePairs.length; j++) {
+            queryStringNew += this._keyValuePairs[j];
+            if (j < this._keyValuePairs.length - 1) {
+                queryStringNew += '&';
+            }
+        }
+        this._queryString = queryStringNew;
+    }
+    ///<summary>
+    /// Appends the error query string.
+    ///</summary>
+    this.appendErrorsQS = function (prefix) {
+        var ret = Microsoft.UpdateServices.Catalog.Constants.EmptyString;
+        if (typeof (prefix) != typeof (Microsoft.UpdateServices.Catalog.Constants.UndefinedValue) && prefix.length > 0) {
+            ret = prefix;
+        }
+
+        var qsErrVal = this.getValue(Microsoft.UpdateServices.Catalog.Constants.QueryStringErrors);
+        if (qsErrVal) {
+            if (ret.length > 0) {
+                ret = ret + "&" + Microsoft.UpdateServices.Catalog.Constants.QueryStringErrors + "=" + qsErrVal;
+            }
+            else {
+                ret = "?" + Microsoft.UpdateServices.Catalog.Constants.QueryStringErrors + "=" + qsErrVal;
+            }
+        }
+        return ret;
+    }
+}
+
+Microsoft.UpdateServices.Catalog.QueryString.registerClass("Microsoft.UpdateServices.Catalog.QueryString");
+
+/// <summary>
+///    Utility class to hold all the utility function
+/// </summary>
+Microsoft.UpdateServices.Catalog.UI.Utility = function () {
+
+}
+/// <summary>
+///    Converts the size into KB and MB
+/// </summary>
+Microsoft.UpdateServices.Catalog.UI.Utility.formatSize = function (size) {
+    var sizeStr = Microsoft.UpdateServices.Catalog.Constants.EmptyString;
+    if (size >= (1000 * Microsoft.UpdateServices.Catalog.Constants.UnitKB)) {
+        sizeStr = Number(size / Microsoft.UpdateServices.Catalog.Constants.UnitMB).toFixed(1) + ' MB';
+        //replace the decimal point with the current cultures number decimal seperator
+        sizeStr = sizeStr.replace(".", Microsoft.UpdateServices.Catalog.Constants.NumberDecimalSeparator);
+    }
+    else if (size >= 0) {
+        sizeStr = Number(size / Microsoft.UpdateServices.Catalog.Constants.UnitKB).toFixed(0) + ' KB';
+    }
+
+    return sizeStr;
+}
+
+
+/// <summary>
+/// Checks to see if a string is a vaild email address.
+/// </summary>
+Microsoft.UpdateServices.Catalog.UI.Utility.validateEmail = function (emailString) {
+
+    var emailFilter = "^[A-z0-9a-z!#$%&'*+-/=?^_`{|}~]+@[A-z0-9a-z!#$%&'*+-/=?^_`{|}~]+\\.[A-z0-9a-z!#$%&'*+-/=?^_`{|}~]+$";
+    var emailRegExp = new RegExp(emailFilter);
+    var validEmail = true;
+
+    validEmail = emailRegExp.test(emailString);
+
+    return validEmail;
+}
+Microsoft.UpdateServices.Catalog.UI.Utility.registerClass("Microsoft.UpdateServices.Catalog.UI.Utility");
+
+/// <summary>
+///     Event class for the catalog. Maintains a list of handlers for the event.
+///     Retained from Atlas CTP after migrating to RTM ASP.Net Ajax.
+/// </summary>
+Microsoft.UpdateServices.Catalog.Event = function (owner, autoInvoke) {
+    var _owner = owner;
+    var _handlers = null;
+    var _actions = null;
+    var _autoInvoke = autoInvoke;
+    var _invoked = false;
+
+    this.get_autoInvoke = function () {
+        return _autoInvoke;
+    }
+
+    this._getActions = function () {
+        if (_actions && _actions.length && !_owner)
+            throw "Actions are only supported on events that have an owner.";
+        if (_actions == null) {
+            _actions = [];
+        }
+        return _actions;
+    }
+
+    this._getHandlers = function () {
+        if (_handlers == null) {
+            _handlers = [];
+        }
+        return _handlers;
+    }
+
+    this._getOwner = function () {
+        return _owner;
+    }
+
+    this.isActive = function () {
+        return ((_handlers != null) && (_handlers.length != 0)) ||
+            ((_actions != null) && (_actions.length != 0));
+    }
+
+    this.get_isInvoked = function () {
+        return _invoked;
+    }
+
+    this.dispose = function () {
+        if (_handlers) {
+            for (var h = _handlers.length - 1; h >= 0; h--) {
+                _handlers[h] = null;
+            }
+            _handlers = null;
+        }
+        if (_actions) {
+            for (var i = _actions.length - 1; i >= 0; i--) {
+                _actions[i].dispose();
+            }
+            _actions = null;
+        }
+
+        _owner = null;
+    }
+
+    this._setInvoked = function (value) {
+        _invoked = true;
+    }
+}
+
+Microsoft.UpdateServices.Catalog.Event.registerClass('Microsoft.UpdateServices.Catalog.Event', null, Sys.IDisposable);
+
+// Microsoft.UpdateServices.Catalog.Event 
+// member functions on the prototype property.
+
+Microsoft.UpdateServices.Catalog.Event.prototype.add = function (handler) {
+    Array.add(this._getHandlers(), handler);
+    if (this.get_autoInvoke() && this.get_isInvoked()) {
+        handler(this._getOwner(), null);
+    }
+}
+
+Microsoft.UpdateServices.Catalog.Event.prototype.addAction = function (action) {
+    action.setOwner(this._getOwner());
+    Array.add(this._getActions(), action);
+}
+
+Microsoft.UpdateServices.Catalog.Event.prototype.remove = function (handler) {
+    Array.remove(this._getHandlers(), handler);
+}
+
+Microsoft.UpdateServices.Catalog.Event.prototype.removeAction = function (action) {
+    action.dispose();
+    Array.remove(this._getActions(), action);
+}
+
+Microsoft.UpdateServices.Catalog.Event.prototype.invoke = function (sender, eventArgs) {
+    if (this.isActive()) {
+        var actions = this._getActions();
+        var handlers = this._getHandlers();
+        var hasPostActions = false;
+        var i;
+
+        for (i = 0; i < actions.length; i++) {
+            if (actions[i].get_sequence() == Sys.ActionSequence.BeforeEventHandler) {
+                actions[i].execute(sender, eventArgs);
+            }
+            else {
+                hasPostActions = true;
+            }
+        }
+
+        for (i = 0; i < handlers.length; i++) {
+            handlers[i](sender, eventArgs);
+        }
+
+        if (hasPostActions) {
+            for (i = 0; i < actions.length; i++) {
+                if (actions[i].get_sequence() == Sys.ActionSequence.AfterEventHandler) {
+                    actions[i].execute(sender, eventArgs);
+                }
+            }
+        }
+
+        this._setInvoked();
+    }
+}
+
+// Logger Class
+Microsoft.UpdateServices.Catalog.Logger =
+    {
+        logLevelFatal: 1,
+        logLevelWarning: 2,
+        logLevelInfo: 3,
+        logLevelVerbose: 4,
+
+        initialize: function (control) {
+            if (!Microsoft.UpdateServices.Catalog.Logger.control) {
+                Microsoft.UpdateServices.Catalog.Logger.control = control;
+            }
+        },
+
+        log: function (level, message) {
+            if (Microsoft.UpdateServices.Catalog.Logger.control) {
+                if (level >= Microsoft.UpdateServices.Catalog.Logger.logLevelFatal &&
+                    level <= Microsoft.UpdateServices.Catalog.Logger.logLevelVerbose &&
+                    message != null) {
+                    Microsoft.UpdateServices.Catalog.Logger.control.Log(level, message);
+                }
+            }
+        }
+    }
+window.logger = Microsoft.UpdateServices.Catalog.Logger;

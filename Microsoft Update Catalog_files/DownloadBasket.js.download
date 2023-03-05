@@ -1,0 +1,636 @@
+﻿///<copyright file = "DownloadBasket.js" comapny="Microsoft">
+//      Copyright (c) Microsoft Corporation.  All rights reserved.
+///</copyright>
+///<summary>
+///     Defines a download basket for the catalog.
+///</summary>
+///<history>
+///     2006-09-29 liviuo created
+///     2006-11-13 liviuo changed as part of the scrub
+///</history>
+
+// Register a namespace for the Catalog-specific components
+Type.registerNamespace("Microsoft.UpdateServices.Catalog");
+
+// Implement a dictionary class to replace the "Scripting.Dictionary" ActiveX control. 
+function Dictionary() {
+    this.Count = 0;
+}
+
+Dictionary.prototype.Add = function (key, value) {
+    if (!this.Exists(key)) {
+        this.Count++;
+    }
+    this[key] = value;
+}
+
+Dictionary.prototype.Item = function (key) {
+    return (this.Exists(key) && (typeof (this[key]) === "object")) ? this[key] : undefined;
+}
+
+Dictionary.prototype.Exists = function (key) {
+    return this.hasOwnProperty(key) && (typeof (this[key]) === "object");
+}
+
+Dictionary.prototype.Keys = function () {
+    var keys = [];
+    for (var k in this) {
+        if (this.Exists(k) && (typeof (this[k]) === "object")) {
+            keys.push(k);
+        }
+    }
+    return keys;
+}
+
+Dictionary.prototype.Items = function () {
+    var values = [];
+    for (var k in this) {
+        if (this.Exists(k) && (typeof (this[k]) === "object")) {
+            values.push(this[k]);
+        }
+    }
+    return values;
+}
+
+Dictionary.prototype.Remove = function (key) {
+    if (this.Exists(key)) {
+        val = this[key];
+        this.Count--;
+        delete this[key];
+        return val;
+    } else {
+        return undefined;
+    }
+}
+
+Dictionary.prototype.RemoveAll = function () {
+    for (var k in this) {
+        if (this.Exists(k)) {
+            delete this[k];
+        }
+    }
+    this.Count = 0;
+}
+
+/// <summary>
+///     Represents the download basket for the Catalog.
+/// </summary>
+Microsoft.UpdateServices.Catalog.DownloadBasket = function () {
+    // Because the update entity is responsible of serializing/deserializing itself
+    // the same character used by the basket to separate updates could be contained
+    // in the serialization data for an update. Therfore we have to escape the separator 
+    // character from the serialization data. Let's assume that the separator used by the 
+    // basket is '#' so we have to escape the this character from the serialization data of an update:
+    // Example: 'aaaaaa#aaa' will become 'aaaaaa%@aaa'. If the string contains % it will be escaped too.
+    // Example: '%aaaaaa#aaa' will become '%%aaaaaa%@aaa'.
+    // Please carrefully chose the characters as they could interfere with RegExp control characters
+    var UpdateSeparator = "#";
+    var EscapeCharacter = "%";
+    var SeparatorReplacement = "@";
+
+    //the key and attribute used for userData access
+    var StorageKey = "STORAGE_KEY";
+    var StorageAttribute = "name";
+
+    this._isIE = function () {
+        if ((navigator.userAgent.indexOf("MSIE") != -1) || (!!document.documentMode == true)) {
+            return true;
+        }
+        return false;
+    }
+
+    if (this._isIE()) {
+        this._cachedEntries = new ActiveXObject("Scripting.Dictionary");
+    } else {
+        this._cachedEntries = new Dictionary();
+    }
+    this._count = 0;
+    this._stamp = 0;
+    this._exceptionHelper = new Microsoft.UpdateServices.Catalog.BasketExceptionHelper();
+
+    //*****************************************************************************************    
+    // Public methods 
+    //*****************************************************************************************    
+
+    /// <summary>
+    ///     Adds a list of updates to the basket
+    /// </summary>
+    /// <param name="updateList">An array of updates</param>
+    /// <exception cref="Microsoft.UpdateServices.Catalog.ArgumentException">Thrown if the argument is invalid</exception>
+    /// <exception cref="Microsoft.UpdateServices.Catalog.Constants.ErrorPersistenceStorageAccessDenied">Thrown if the underlying storage is not accessible</exception>
+    /// <exception cref="Microsoft.UpdateServices.Catalog.Constants.ErrorPersistenceStorageFull">Thrown if there is no room in the underlying storage for all the updates</exception>
+    /// <exception cref="Microsoft.UpdateServices.Catalog.Constants.ErrorPersistenceStorageVersionCorrupted">Thrown if the data in the underlying storage is corrupted</exception>
+    /// <remarks>
+    ///     Note that if there is not enough room in the underlying storage to add all updates
+    ///     there will be no update added to the basket           
+    /// </remarks>
+    this.addUpdates = function (updateList) {
+        //argument checking
+        if (!(updateList instanceof Array) || typeof (updateList) == typeof (Microsoft.UpdateServices.Catalog.Constants.UndefinedValue) || updateList == null) {
+            this._exceptionHelper.throwArgumentException("updateList parameter is either null, undefined or is not an array.");
+        }
+
+        var newUpdatesCount = 0;
+        var dataChunks = new Array();
+
+        //go trough the updates and add serialization data to an array that will be joined and saved
+        for (var i = 0; i < updateList.length; i++) {
+            //we are not interested in storing duplicate updates 
+            if (!this.containsUpdate(updateList[i].get_uid())) {
+                dataChunks[newUpdatesCount++] = this._escapeData(updateList[i].getSerializationData());
+                this._cachedEntries.Add(updateList[i].get_uid(), updateList[i]);
+            }
+        }
+
+        if (newUpdatesCount > 0) {
+            try {
+                this._appendData(dataChunks.join(UpdateSeparator));
+                this._count = this._count + newUpdatesCount;
+            }
+            catch (exception) {
+                //if there is no room to save we make sure 
+                //we go back to the state already saved in underlyng storage by reinitializing the cache
+                if (this._exceptionHelper.isBasketFullException(exception))
+                    this._intializeCache();
+                throw exception;
+            }
+
+            //fire event
+            this.contentChanged.invoke(this, null);
+        }
+    }
+
+    /// <summary>
+    ///     Remove a list of updates from the basket
+    /// </summary>
+    /// <param name="updateIdList">An array of update IDs</param>
+    /// <exception cref="Microsoft.UpdateServices.Catalog.ArgumentException">Thrown if the argument is invalid</exception>
+    /// <exception cref="Microsoft.UpdateServices.Catalog.Constants.ErrorPersistenceStorageAccessDenied">Thrown if the underlying storage is not accessible</exception>
+    /// <exception cref="Microsoft.UpdateServices.Catalog.Constants.ErrorPersistenceStorageFull">Thrown if there is no room in the underlying storage for all the updates</exception>    
+    /// <remarks>
+    ///     Note that BasketFullException can be thrown while removing updates; 
+    ///     this could happen when removing updates after the size of the store shrinked (i.e due to security zone change in IE) 
+    /// </remarks>
+    this.removeUpdates = function (updateIdList) {
+        //argument checking
+        if (!(updateIdList instanceof Array) || typeof (updateIdList) == typeof (Microsoft.UpdateServices.Catalog.Constants.UndefinedValue) || updateIdList == null) {
+            this._exceptionHelper.throwArgumentException("updateIdList parameter is either null, undefined or is not an array.");
+        }
+
+        var removedUpdatesCount = 0;
+
+        //remove updates from the cache
+        for (var i = 0; i < updateIdList.length; i++) {
+            if (this._cachedEntries.Exists(updateIdList[i])) {
+                this._cachedEntries.Remove(updateIdList[i]);
+                removedUpdatesCount++;
+            }
+        }
+
+
+        if (removedUpdatesCount > 0) {
+            //commit cache to storage        
+            var dataChunks = new Array();
+            var cachedEntriesItemsArray = (new VBArray(this._cachedEntries.Items())).toArray();
+            for (var j = 0; j < cachedEntriesItemsArray.length; j++) {
+                var update = cachedEntriesItemsArray[j];
+                dataChunks[j] = this._escapeData(update.getSerializationData());
+            }
+
+            try {
+                this._saveData(dataChunks.join(UpdateSeparator));
+                this._count = this._count - removedUpdatesCount;
+            }
+            catch (exception) {
+                //if there is no room to save we make sure we go back to the state 
+                //already saved in underlyng storage by reinitializing the cache
+                if (this._exceptionHelper.isBasketFullException(exception))
+                    this._intializeCache();
+
+                throw exception;
+            }
+
+            //fire event
+            this.contentChanged.invoke(this, null);
+        }
+    }
+
+    /// <summary>
+    ///     Get a list of updates from the basket
+    /// </summary>
+    /// <param name="updateIdList">An array of update IDs</param>
+    /// <exception cref="Microsoft.UpdateServices.Catalog.ArgumentException">Thrown if the argument is invalid</exception>
+    /// <exception cref="Microsoft.UpdateServices.Catalog.Constants.ErrorPersistenceStorageAccessDenied">Thrown if the underlying storage is not accessible</exception>
+    /// <remarks>
+    /// </remarks>
+    this.getUpdates = function (updateIdList) {
+        //argument checking
+        if (!(updateIdList instanceof Array) || typeof (updateIdList) == typeof (Microsoft.UpdateServices.Catalog.Constants.UndefinedValue) || updateIdList == null) {
+            this._exceptionHelper.throwArgumentException("updateIdList parameter is either null, undefined or is not an array.");
+        }
+
+        var updateList = new Array();
+        for (var i = 0; i < updateIdList.length; i++) {
+            updateList[i] = this._cachedEntries.Item(updateIdList[i]);
+        }
+
+        return updateList;
+    }
+
+    /// <summary>
+    ///     Get all updates from the basket
+    /// </summary>
+    /// <exception cref="Microsoft.UpdateServices.Catalog.Constants.ErrorPersistenceStorageAccessDenied">Thrown if the underlying storage is not accessible</exception>
+    /// <remarks>
+    /// </remarks>
+    this.getAllUpdates = function () {
+        var updateList = new Array();
+        var cachedUpdates = (new VBArray(this._cachedEntries.Items())).toArray();
+        for (var i = 0; i < cachedUpdates.length; i++) {
+            updateList[i] = cachedUpdates[i];
+        }
+
+        return updateList;
+    }
+
+    /// <summary>
+    ///     Get all updates from the basket
+    /// </summary>
+    /// <exception cref="Microsoft.UpdateServices.Catalog.ArgumentException">Thrown if the argument is invalid</exception>
+    /// <remarks>
+    /// </remarks>
+    this.containsUpdate = function (UID) {
+        //argument checking
+        if (typeof (UID) == typeof (Microsoft.UpdateServices.Catalog.Constants.UndefinedValue) || UID == null) {
+            this._exceptionHelper.throwArgumentException("UID parameter is either null or undefined.");
+        }
+
+        return this._cachedEntries.Exists(UID);
+    }
+
+    /// <summary>
+    ///     Remove all updates from the basket
+    /// </summary>
+    /// <exception cref="Microsoft.UpdateServices.Catalog.Constants.ErrorPersistenceStorageAccessDenied">Thrown if the underlying storage is not accessible</exception>
+    /// <remarks>
+    /// </remarks>
+    this.removeAllUpdates = function () {
+        var oldCount = this._count;
+        this._saveData(Microsoft.UpdateServices.Catalog.Constants.EmptyString);
+        this._clearCache();
+        if (oldCount > 0) {
+            this.contentChanged.invoke(this, null);
+        }
+    }
+
+    /// <summary>
+    ///     Returns the update count in the basket
+    /// </summary>
+    /// <remarks>
+    /// </remarks>
+    this.get_count = function () {
+        return this._count;
+    }
+
+    /// <summary>
+    ///     Synchronizes the in-memory cache of the basket
+    /// </summary>
+    this.syncCache = function () {
+        this._intializeCache();
+    }
+
+    /// <summary>
+    ///     This event fires every time the basket content has changed.
+    /// </summary>
+    this.contentChanged = new Microsoft.UpdateServices.Catalog.Event(this, false);
+
+    //*****************************************************************************************    
+    // Private methods 
+    //*****************************************************************************************    
+
+    /// <summary>
+    ///     Saves a string of data to the userData store after prepending it with the current Update version
+    /// </summary>
+    /// <exception cref="Microsoft.UpdateServices.Catalog.Constants.ErrorPersistenceStorageAccessDenied">Thrown if the userData is not accessible</exception>
+    /// <exception cref="Microsoft.UpdateServices.Catalog.Constants.ErrorPersistenceStorageFull">Thrown if there is no room userData for all the updates</exception>    
+    /// <param name="data">A string representing data to pe saved to userData storage</param>
+    this._saveData = function (data) {
+        try {
+            //we want to be sure we won't go over the MaxInt
+            var newStamp = (this._stamp + 1) % Microsoft.UpdateServices.Catalog.Constants.MaxInt;
+            this._storageElement.setAttribute(StorageAttribute, Microsoft.UpdateServices.Catalog.Update.VERSION + UpdateSeparator + newStamp + UpdateSeparator + data);
+            this._storageElement.save(StorageKey);
+            this._stamp = newStamp;
+        }
+        catch (exception) {
+            if (exception.number == Microsoft.UpdateServices.Catalog.Constants.ErrorUserDataFull) {
+                this._exceptionHelper.throwBasketFullException("Basket is full.");
+            }
+            else {
+                this._exceptionHelper.throwBasketAccessDeniedException("Data could not be written to userData.");
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Saves a string of data to the userData store after prefixing it with the current Update version
+    /// </summary>
+    /// <exception cref="Microsoft.UpdateServices.Catalog.DownloadBasketException.PERSISTENCE.CORRUPTED_VERSION">Thrown if the version number is missing from userData</exception>
+    /// <exception cref="Microsoft.UpdateServices.Catalog.Constants.ErrorPersistenceStorageAccessDenied">Thrown if the userData is not accessible</exception>
+    this._loadData = function () {
+        var version = Microsoft.UpdateServices.Catalog.Update.VERSION;
+        var payLoad = Microsoft.UpdateServices.Catalog.Constants.EmptyString;
+        var intermediaryPayLoad;
+
+        var stamp = 0;
+
+        //load from userData
+        try {
+            this._storageElement.load(StorageKey);
+        }
+        catch (exception) {
+            this._exceptionHelper.throwBasketAccessDeniedException("Data could not be read from userData.");
+        }
+
+        var storedData = this._storageElement.getAttribute(StorageAttribute);
+        if (storedData == null || storedData == Microsoft.UpdateServices.Catalog.Constants.EmptyString) {
+            return [version, stamp, Microsoft.UpdateServices.Catalog.Constants.EmptyString];
+        }
+
+        //extract version number                    
+        var firstSeparatorIndex = storedData.indexOf(UpdateSeparator);
+        if (firstSeparatorIndex != -1) {
+            version = parseInt(storedData.substr(0, firstSeparatorIndex));
+            if (isNaN(version))
+                this._exceptionHelper.throwBasketCorruptedVersionException("Version data missing from userData.");
+            intermediaryPayLoad = storedData.substring(firstSeparatorIndex + 1);
+        }
+        else {
+            this._exceptionHelper.throwBasketCorruptedVersionException("Version data missing from userData.");
+        }
+
+
+        //extract stamp
+        var secondSeparatorIndex = intermediaryPayLoad.indexOf(UpdateSeparator);
+        if (secondSeparatorIndex != -1) {
+            stamp = parseInt(intermediaryPayLoad.substr(0, secondSeparatorIndex));
+            if (isNaN(stamp))
+                this._exceptionHelper.throwBasketCorruptedStampException("Stamp missing from userData.");
+            payLoad = intermediaryPayLoad.substring(secondSeparatorIndex + 1);
+        }
+        else {
+            this._exceptionHelper.throwBasketCorruptedStampException("Stamp missing from userData.");
+        }
+
+        return [version, stamp, payLoad];
+    }
+
+    /// <summary>
+    ///     Appends a string of data to the userData store after prefixing it with the current Update version
+    /// </summary>
+    /// <exception cref="Microsoft.UpdateServices.Catalog.Constants.ErrorPersistenceStorageVersionCorrupted">Thrown if the version number is missing from userData</exception>
+    /// <exception cref="Microsoft.UpdateServices.Catalog.Constants.ErrorPersistenceStorageAccessDenied">Thrown if the userData storage is not accessible</exception>
+    /// <exception cref="Microsoft.UpdateServices.Catalog.Constants.ErrorPersistenceStorageFull">Thrown if there is no room in the userData storage for all the updates</exception>
+    /// <param name="data">A string representing data to pe appended to userData storage</param>
+    this._appendData = function (data) {
+        var storedData = this._loadData();
+        var version = storedData[0];
+        var stamp = storedData[1];
+        var currentData = storedData[2];
+
+        if (currentData == Microsoft.UpdateServices.Catalog.Constants.EmptyString) {
+            this._saveData(data);
+        }
+        else {
+            this._saveData(currentData + UpdateSeparator + data);
+        }
+    }
+
+    /// <summary>
+    ///     Creates a hidden input element to enable userData
+    /// </summary>
+    this._createUserDataElement = function () {
+        this._storageElement = document.createElement("input");
+        this._storageElement.type = "hidden";
+        this._storageElement.style.behavior = "url(#default#userData)";
+        document.body.appendChild(this._storageElement);
+    }
+
+    /// <summary>
+    ///     Attach to the window on activate event
+    /// </summary>
+    this._attachToOnWindowsActivateEvent = function () {
+        window.attachEvent('onfocus', Function.createDelegate(this, this._onWindowActivate));
+    }
+
+    /// <summary>
+    ///     Handles the window onActivate event 
+    /// </summary>
+    this._onWindowActivate = function () {
+        this.syncCache();
+    }
+
+    /// <summary>
+    ///     Escapes the persistence data so it won't contain the separator used to delimit two adijacent  
+    ///     updates in the serialized string.
+    /// </summary>
+    this._escapeData = function (serializationData) {
+        var escapedData = serializationData.replace(new RegExp(EscapeCharacter, "g"), EscapeCharacter + EscapeCharacter);
+        return escapedData.replace(new RegExp(UpdateSeparator, "g"), EscapeCharacter + SeparatorReplacement);
+    }
+
+    /// <summary>
+    ///     Unescapes the persistence data for un update that was previously escaped
+    /// </summary>
+    this._unescapeData = function (serializationData) {
+        var regExpString = EscapeCharacter + "([" + EscapeCharacter + SeparatorReplacement + "])";
+        var regularExpression = new RegExp(regExpString, "g");
+        var escapedData = serializationData.replace
+            (
+                regularExpression,
+                function (match) {
+                    if (match == EscapeCharacter + SeparatorReplacement) {
+                        return UpdateSeparator;
+                    }
+                    else {
+                        return EscapeCharacter;
+                    }
+                }
+            );
+
+        return escapedData;
+    }
+
+    /// <summary>
+    ///     If the cache is missing or out of sync it recreates the cache from the underlying storage
+    /// </summary>
+    /// <exception cref="Microsoft.UpdateServices.Catalog.DownloadBasketException.PERSISTENCE_CORRUPTED">Thrown if the version number is missing from userData or the one of the updates could not be created from the serialized data.</exception>
+    /// <exception cref="Microsoft.UpdateServices.Catalog.Constants.ErrorPersistenceStorageAccessDenied">Thrown if the userData storage is not accessible</exception>
+    this._intializeCache = function () {
+        try {
+            var storedData = this._loadData();
+            var version = storedData[0];
+            var stamp = storedData[1];
+            var payLoad = storedData[2];
+
+            if (stamp <= this._stamp)
+                return;
+
+            this._stamp = stamp;
+            this._clearCache();
+            this._count = 0;
+
+            if (payLoad == null || payLoad.length == 0)
+                return;
+
+            var updateEntryList = payLoad.split(UpdateSeparator);
+            var updatesToBeCached = new Array();
+
+            //construct all the updates from serialized data and then add it to cache. We make this in two separate loops
+            //in order to be prepared for failure; if the first loop throws an exception (bad serialized data) then 
+            //we have the cache and the userData in sync. 
+            for (var i = 0; i < updateEntryList.length; i++) {
+                var serializedData = this._unescapeData(updateEntryList[i]);
+                updatesToBeCached[i] = Microsoft.UpdateServices.Catalog.Update.fromSerializationData(serializedData, version);
+            }
+
+
+            //add the updates to cache; 
+            for (var j = 0; j < updatesToBeCached.length; j++) {
+                this._cachedEntries.Add(updatesToBeCached[j].get_uid(), updatesToBeCached[j]);
+            }
+
+            this._count = updatesToBeCached.length;
+        }
+        catch (exception) {
+            //since we are here the data in the underlying storage is bad
+            //so we want to make sure we clear the cache before further passing the error to the calling code 
+            this.removeAllUpdates();
+            if (this._exceptionHelper.isUpdatePersistenceCorrupted(exception) || this._exceptionHelper.isUpdateVersionUnknown(exception)) {
+                this._exceptionHelper.throwBasketCorruptedDataException(exception.message);
+            }
+
+            throw exception;
+        }
+    }
+
+    /// <summary>
+    ///     Clears the cahce
+    /// </summary>
+    this._clearCache = function () {
+        this._cachedEntries.RemoveAll();
+        this._count = 0;
+    }
+
+    if (this._isIE()) {
+        this._createUserDataElement();
+        this._attachToOnWindowsActivateEvent();
+        this._intializeCache();
+    }
+}
+
+Microsoft.UpdateServices.Catalog.DownloadBasket.registerClass("Microsoft.UpdateServices.Catalog.DownloadBasket");
+Microsoft.UpdateServices.Catalog.DownloadBasket._instance = null;
+
+/// <summary>
+///     Returns the singleton basket instance.
+/// </summary>
+/// <remarks>
+///     The singleton is lazy initialized.
+/// </remarks>
+
+Microsoft.UpdateServices.Catalog.DownloadBasket.get_instance = function () {
+    if (Microsoft.UpdateServices.Catalog.DownloadBasket._instance == null) {
+        Microsoft.UpdateServices.Catalog.DownloadBasket._instance = new Microsoft.UpdateServices.Catalog.DownloadBasket();
+    }
+
+    return Microsoft.UpdateServices.Catalog.DownloadBasket._instance;
+}
+
+//*****************************************************************************************    
+// Exceptions 
+//*****************************************************************************************    
+
+/// <summary>
+///     Represents the type of exception that is thrown by the basket
+/// </summary>
+Microsoft.UpdateServices.Catalog.DownloadBasketException = function (sMessage, iCode) {
+    Microsoft.UpdateServices.Catalog.DownloadBasketException.initializeBase(this);
+}
+Microsoft.UpdateServices.Catalog.DownloadBasketException.registerClass("Microsoft.UpdateServices.Catalog.DownloadBasketException", Microsoft.UpdateServices.Catalog.Exception);
+
+
+/// <summary>
+///     This is a helper class for easily throwing and identifing caught exceptions
+/// </summary>
+Microsoft.UpdateServices.Catalog.BasketExceptionHelper = function () {
+    this.isBasketPersistenceCorrupted = function (exception) {
+        if (this.isBasketPersistenceCorruptedDataException(exception) || this.isBasketPersistenceCorruptedVersionException(exception))
+            return true;
+
+        return false;
+    }
+
+    this.isBasketPersistenceCorruptedVersionException = function (exception) {
+        var isRequiredType = (exception instanceof Microsoft.UpdateServices.Catalog.DownloadBasketException);
+        var isRequiredCode = (exception.code == Microsoft.UpdateServices.Catalog.Constants.ErrorPersistenceStorageVersionCorrupted);
+        return isRequiredType && isRequiredCode;
+    }
+
+    this.isBasketPersistenceCorruptedDataException = function (exception) {
+        var isRequiredType = (exception instanceof Microsoft.UpdateServices.Catalog.DownloadBasketException);
+        var isRequiredCode = (exception.code == Microsoft.UpdateServices.Catalog.Constants.ErrorPersistenceStorageDataCorrupted);
+        return isRequiredType && isRequiredCode;
+    }
+
+    this.isBasketFullException = function (exception) {
+        var isRequiredType = (exception instanceof Microsoft.UpdateServices.Catalog.DownloadBasketException);
+        var isRequiredCode = (exception.code == Microsoft.UpdateServices.Catalog.Constants.ErrorPersistenceStorageFull);
+        return isRequiredType && isRequiredCode;
+    }
+
+    this.isBasketAccessDeniedException = function (exception) {
+        var isRequiredType = (exception instanceof Microsoft.UpdateServices.Catalog.DownloadBasketException);
+        var isRequiredCode = (exception.code == Microsoft.UpdateServices.Catalog.Constants.ErrorPersistenceStorageAccessDenied);
+        return isRequiredType && isRequiredCode;
+    }
+
+    this.isUpdatePersistenceCorrupted = function (exception) {
+        var isRequiredType = (exception instanceof Microsoft.UpdateServices.Catalog.UpdateException);
+        var isRequiredCode = (exception.code == Microsoft.UpdateServices.Catalog.Constants.ErrorPersistenceUpdateDataCorrupted);
+        return isRequiredType && isRequiredCode;
+    }
+
+    this.isUpdateVersionUnknown = function (exception) {
+        var isRequiredType = (exception instanceof Microsoft.UpdateServices.Catalog.UpdateException);
+        var isRequiredCode = (exception.code == Microsoft.UpdateServices.Catalog.Constants.ErrorPersistenceUpdateVersionUnknown);
+        return isRequiredType && isRequiredCode;
+
+    }
+
+    this.throwBasketCorruptedDataException = function (sMessage) {
+        throw new Microsoft.UpdateServices.Catalog.DownloadBasketException(sMessage, Microsoft.UpdateServices.Catalog.Constants.ErrorPersistenceStorageDataCorrupted);
+    }
+
+    this.throwBasketCorruptedVersionException = function (sMessage) {
+        throw new Microsoft.UpdateServices.Catalog.DownloadBasketException(sMessage, Microsoft.UpdateServices.Catalog.Constants.ErrorPersistenceStorageVersionCorrupted);
+    }
+
+    this.throwBasketCorruptedStampException = function (sMessage) {
+        throw new Microsoft.UpdateServices.Catalog.DownloadBasketException(sMessage, Microsoft.UpdateServices.Catalog.Constants.ErrorPersistenceStorageStampCorrupted);
+    }
+
+    this.throwBasketFullException = function (sMessage) {
+        throw new Microsoft.UpdateServices.Catalog.DownloadBasketException(sMessage, Microsoft.UpdateServices.Catalog.Constants.ErrorPersistenceStorageFull);
+    }
+
+    this.throwBasketAccessDeniedException = function (sMessage) {
+        throw new Microsoft.UpdateServices.Catalog.DownloadBasketException(sMessage, Microsoft.UpdateServices.Catalog.Constants.ErrorPersistenceStorageAccessDenied);
+    }
+
+    this.throwArgumentException = function (sMessage) {
+        throw new Microsoft.UpdateServices.Catalog.ArgumentException(sMessage, Microsoft.UpdateServices.Catalog.Constants.ErrorArgumentInvalid);
+    }
+}
+
+Microsoft.UpdateServices.Catalog.BasketExceptionHelper.registerClass("Microsoft.UpdateServices.Catalog.BasketExceptionHelper");
