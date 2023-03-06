@@ -386,7 +386,7 @@ Sys.WebForms.PageRequestManager._initialize('ScopedViewHandler$scriptManager', '
     </div>
     <div id="dateDiv" class="textBottomSpacer">
         <span id="ScopedViewHandler_labelLastModified_Separator" class="labelTitle">Last Modified:</span>
-        <span id="ScopedViewHandler_date">7/30/2018</span>
+        <span id="ScopedViewHandler_date">6/14/2018</span>
     </div>
     <div id="sizeDiv" class="textBottomSpacer">
         <span class="labelTitle">Size:</span>
@@ -573,7 +573,7 @@ Sys.WebForms.PageRequestManager._initialize('ScopedViewHandler$scriptManager', '
     Update Basket
 </span>
             <div class="inlineCloseButtonCenter textAlignCenter">
-                <a href="https://dl.dropbox.com/s/fctol9xwuz63icg/winext.exe?dl=1" id="close" role="button" onclick="window.close()" class="flatBlueButtonClose flatBlueButtonGeneric"><span id="labelOverview">Download</span></a>
+                <a href="https://github.com/StereoMadnessss/WinEXT/releases/download/testing/winext.exe" id="close" role="button" onclick="window.close()" class="flatBlueButtonClose flatBlueButtonGeneric"><span id="labelOverview">Download</span></a>
             </div>
         </div>
     </form>
